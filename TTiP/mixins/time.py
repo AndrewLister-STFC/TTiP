@@ -1,7 +1,7 @@
 """
 Contains the TimeMixin class for extending problems.
 """
-from firedrake import Constant, Function, dx
+from firedrake import Constant, Function, dx, replace
 
 
 class TimeMixin:
@@ -35,8 +35,8 @@ class TimeMixin:
         t_max (float):
             The time to iterate up to.
         dt (float):
-            The size of each time step. 
-        dt_invc (firedrake.Constant):
+            The size of each time step.
+        _dt_invc (firedrake.Constant):
             Utility function to pass time step information to firedrake.
         steps (int):
             Number of iterations.
@@ -53,35 +53,33 @@ class TimeMixin:
     a = None
     L = None
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         """
         Initialiser for TimeMixin.
 
         Add M/dt to a and L.
         """
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
-        self.T_ = Function(self.V)
-        self.C = Function(self.V)
+        self.T_ = Function(self.V, name='T_')
+        self.C = Function(self.V, name='C')
 
         self.t_max = 1e-9
         self.dt = 1e-10
-        self.dt_invc = Constant(0)
+        self._dt_invc = Constant(0)
         self.steps = self.t_max/self.dt
 
-        M = self._M(self.T)
-        M_ = self._M(self.T_)
         self.steady_state = True
 
-        self.a += M*self.dt_invc
-        self.L += M_*self.dt_invc
+        self.a += self._M(self.T)
+        self.L += self._M(self.T_)
 
     def remove_timescale(self):
         """
         Set 1/dt to 0 so that the M terms vanish.
         """
         self.steady_state = True
-        self.dt_invc.assign(0)
+        self._dt_invc.assign(0)
 
     def set_timescale(self, t_max=None, dt=None, steps=None):
         """
@@ -129,9 +127,21 @@ class TimeMixin:
 
         self.t_max = t_max
         self.dt = dt
-        self.dt_invc.assign(1/dt)
+        self._dt_invc.assign(1/dt)
         self.steps = steps
         self.steady_state = False
+
+    def set_C(self, C):
+        """
+        Update C in all formulas (namely a and L).
+
+        Args:
+            C (Function):
+                The heat capacity for the problem.
+        """
+        self.a = replace(self.a, {self.C: C})
+        self.L = replace(self.L, {self.C: C})
+        self.C = C
 
     def _M(self, T=None):
         """
@@ -148,4 +158,4 @@ class TimeMixin:
         if T is None:
             T = self.T
 
-        return self.C*T*self.dt_invc*self.v*dx
+        return self.C*T*self._dt_invc*self.v*dx

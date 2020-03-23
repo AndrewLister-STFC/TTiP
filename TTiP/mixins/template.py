@@ -23,13 +23,13 @@ class <name>:
     # These will be replaced by the init in te class this is mixed into.
     <required attributes>
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         """
         Initialiser for <name>.
 
         <description>
         """
-        super().__init__()
+        super().__init__(*args, **kwargs)
         <init>
 
     <other functions>

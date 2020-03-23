@@ -1,10 +1,11 @@
 """
 This file stores the base problem and any created by adding mixins.
 """
-from firedrake import Function, TestFunction, dot, dx, grad
+from firedrake import Function, TestFunction, dot, dx, grad, replace
 
 
 from TTiP.mixins.boundaries import BoundaryMixin
+from TTiP.mixins.conductivity import SpitzerHarmMixin
 from TTiP.mixins.time import TimeMixin
 
 
@@ -53,12 +54,24 @@ class Problem:
 
         # Initialise functions for problem.
         self.v = TestFunction(V)
-        self.T = Function(V)
-        self.S = Function(V)
-        self.K = Function(V)
+        self.T = Function(V, name='T')
+        self.S = Function(V, name='S')
+
+        self.K = Function(V, name='K')
 
         self.a = self._A()
         self.L = self._f()
+
+    def set_S(self, S):
+        """
+        Replace S in all formulas (namely L).
+
+        Args:
+            S (Function):
+                The new value for S.
+        """
+        self.L = replace(self.L, {self.S: S})
+        self.S = S
 
     def _A(self):
         """
@@ -79,7 +92,7 @@ class Problem:
         return self.S*self.v*dx
 
 
-class SteadyState(BoundaryMixin, Problem):
+class SteadyStateProblem(SpitzerHarmMixin, BoundaryMixin, Problem):
     """
     A steady state problem with no time dependance.
     This solves the problem where dT/dt=0.
@@ -87,7 +100,8 @@ class SteadyState(BoundaryMixin, Problem):
     pass
 
 
-class TimeDependant(TimeMixin, BoundaryMixin, Problem):
+class TimeDependantProblem(SpitzerHarmMixin, TimeMixin, BoundaryMixin,
+                           Problem):
     """
     A full time dependant problem.
     This includes all terms.

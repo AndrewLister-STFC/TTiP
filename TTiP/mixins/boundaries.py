@@ -2,8 +2,7 @@
 Contains the BoundaryMixin class for extending problems.
 """
 
-from firedrake import (Constant, DirichletBC, FacetNormal, dot, ds, grad,
-                       replace)
+from firedrake import Constant, DirichletBC, FacetNormal, dot, ds, grad
 
 
 class BoundaryMixin:
@@ -26,7 +25,7 @@ class BoundaryMixin:
         v (firedrake.Function):
             The test function for the problem.
         K (firedrake.Function):
-            A function holding the conductivity for the problem. 
+            A function holding the conductivity for the problem.
         a (firedrake.Function):
             The section containing the combination of terms involving both T
             and v.
@@ -37,13 +36,6 @@ class BoundaryMixin:
         bcs (list<firedrake.DirichletBC>):
             A list of any dirichlet contitions that are defined.
             These can't be worked into the variational problem directly.
-        R (firedrake.Function):
-            A function holding parts of the bounds containing both T and v.
-            e.g. K alpha T v ds (robin bound)
-        b (firedrake.Function):
-            A function holding parts of the bounds that don't contain both T
-            and v.
-            e.g. K v g ds (robin bound)
     """
 
     # Variables that must be present for the mixin.
@@ -56,39 +48,17 @@ class BoundaryMixin:
     a = None
     L = None
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         """
         Initialiser for BoundaryMixin.
 
-        Adds R and b to a and L respectively.
+        Boundaries are added in the specific funcs.
+        There is no way to remove a boundary.
         Also creates empty bcs list.
         """
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
         self.bcs = []
-        self.R = Constant(0)
-        self.b = Constant(0)
-
-        self.a += self.R
-        self.L += self.b
-
-    def _update_boundaries(self, R=None, b=None):
-        """
-        Update the values of the boundaries in the combined function if given.
-
-        Args:
-            R (firedrake.Function, optional):
-                The new value for R. Defaults to None.
-            b (firedrake.Function, optional):
-                The new value for b. Defaults to None.
-        """
-        if b is not None:
-            replace(self.L, {self.b: b})
-            self.b = b
-
-        if R is not None:
-            replace(self.a, {self.R: R})
-            self.R = R
 
     def add_boundary(self, boundary_type, **kwargs):
         """
@@ -130,16 +100,14 @@ class BoundaryMixin:
         """
         norm = FacetNormal(self.mesh)
 
-        if isinstance(g, [float, int]):
+        if isinstance(g, (float, int)):
             g = Constant(g)
 
         dbc = DirichletBC(self.V, g, domain)
         self.bcs.append(dbc)
 
-        integrand = -self.K*self.v*dot(grad(self.T), norm)
+        integrand = -1*self.K*self.v*dot(grad(self.T), norm)
         try:
-            R = self.R + sum(integrand*ds(d) for d in domain)
+            self.a += sum(integrand*ds(d) for d in domain)
         except TypeError:
-            R = self.R + integrand*ds(domain)
-
-        self._update_boundaries(R=R)
+            self.a += integrand*ds(domain)

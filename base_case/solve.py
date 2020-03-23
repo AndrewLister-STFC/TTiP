@@ -50,7 +50,7 @@ def run(steady=False):
               f'{timescale[0]:.2g}s - {timescale[1]:.2g}s')
     dt_invc = Constant(1/dt)
     extent = [40e-6, 40e-6, 40e-6]
-    mesh = BoxMesh(100, 100, 100, *extent)
+    mesh = BoxMesh(20, 20, 20, *extent)
 
     V = FunctionSpace(mesh, 'CG', 1)
     print(V.dim())
