@@ -77,14 +77,22 @@ class TimeMixin:
 
         self.a += self._M()
 
-    def approx_delT(self):
+    def approx_delT(self, F=None):
         """
         Replace the delT placeholder with the simple finite difference
         approximation:
         dT/dt ~ (T - T_)/delta_t
+
+        Args:
+            F (Function, optional):
+                The function to replace `delT` in. If None, this will use
+                `self.a`. Defaults to None.
+
+        Returns:
+            Function: The updated F.
         """
         delT = (self.T - self.T_)*self._dt_invc
-        self.a = replace(self.a, {self._delT: delT})
+        return replace(F, {self._delT: delT})
 
     def remove_timescale(self):
         """

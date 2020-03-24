@@ -5,8 +5,10 @@ from datetime import datetime
 
 from firedrake import (H1, File, NonlinearVariationalProblem,
                        NonlinearVariationalSolver)
-from TTiP.mixins.time import TimeMixin
+
+from TTiP.iteration_method import IterationMethod
 from TTiP.mixins.boundaries import BoundaryMixin
+from TTiP.mixins.time import TimeMixin
 
 
 class Solver:
@@ -65,14 +67,13 @@ class Solver:
                 vtk files will be generated in the same directory as the pvd.
                 It is recommended that this is a separate drectory per run.
         """
-        steady_state = True
-        if isinstance(self.problem, TimeMixin):
-            steady_state = self.problem.steady_state
+        F = self.problem.a - self.problem.L
+        steady_state = self.is_steady_state()
 
         if not steady_state:
-            self.problem.approx_delT()
-
-        F = self.problem.a - self.problem.L
+            iter_method = IterationMethod(self.problem)
+            F = iter_method.update(F, 'BackwardEuler')
+            F = self.problem.approx_delT(F)
 
         if isinstance(self.problem, BoundaryMixin):
             var_prob = NonlinearVariationalProblem(
@@ -107,3 +108,14 @@ class Solver:
                 outfile.write(self.u,
                               target_degree=1,
                               target_continuity=H1)
+
+    def is_steady_state(self):
+        """
+        Check if the problem is steady state or not.
+
+        Returns:
+            bool: Whether the problem is steady state.
+        """
+        if isinstance(self.problem, TimeMixin):
+            return self.problem.steady_state
+        return True
