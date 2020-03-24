@@ -30,6 +30,8 @@ class TimeMixin:
     Attributes:
         T_ (firedrake.Function):
             A function used to hold the previous value for T.
+        delT (firedrake.Function):
+            A function used as a placeholder for the time derivative.
         C (firedrake.Function):
             A function used to hold the heat capacity of the mesh.
         t_max (float):
@@ -62,6 +64,8 @@ class TimeMixin:
         super().__init__(*args, **kwargs)
 
         self.T_ = Function(self.V, name='T_')
+        self._delT = Function(self.V, name='delT')
+
         self.C = Function(self.V, name='C')
 
         self.t_max = 1e-9
@@ -71,8 +75,16 @@ class TimeMixin:
 
         self.steady_state = True
 
-        self.a += self._M(self.T)
-        self.L += self._M(self.T_)
+        self.a += self._M()
+
+    def approx_delT(self):
+        """
+        Replace the delT placeholder with the simple finite difference
+        approximation:
+        dT/dt ~ (T - T_)/delta_t
+        """
+        delT = (self.T - self.T_)*self._dt_invc
+        self.a = replace(self.a, {self._delT: delT})
 
     def remove_timescale(self):
         """
@@ -133,29 +145,20 @@ class TimeMixin:
 
     def set_C(self, C):
         """
-        Update C in all formulas (namely a and L).
+        Update C in all formulas (namely a).
 
         Args:
             C (Function):
                 The heat capacity for the problem.
         """
         self.a = replace(self.a, {self.C: C})
-        self.L = replace(self.L, {self.C: C})
         self.C = C
 
-    def _M(self, T=None):
+    def _M(self):
         """
         Create the mass matrix section.
 
-        Args:
-            T (Function, optional):
-                The function to put in the mass matrix. This is useful for
-                changing time step methods. Defaults to None.
-
         Returns:
-            Function: The complete mass matrix section in the var passed.
+            Function: The complete mass matrix section using delT.
         """
-        if T is None:
-            T = self.T
-
-        return self.C*T*self._dt_invc*self.v*dx
+        return self.C*self._delT*self.v*dx

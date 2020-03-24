@@ -54,22 +54,24 @@ class Solver:
             'snes_max_L_solve_fail': 10,
             'snes_max_it': 100}
 
-    def solve(self):
+    def solve(self, file_path='TTiP_result/solution.pvd'):
         """
         Setup and solve the nonlinear problem.
-        If running steady state, return the result.
-        Otherwise, yield each result in turn.
+        Save value to file given.
 
-        Returns:
-            firedrake.Function:
-                Steady state only.
-                The Function set to the solution after running the steady state
-                solve. (dT/dt = 0)
-
-        Yields:
-            firedrake.Function:
-                The Function set to the solution at the next timestep.
+        Args:
+            file_path (string):
+                The path to save the pvd file to.
+                vtk files will be generated in the same directory as the pvd.
+                It is recommended that this is a separate drectory per run.
         """
+        steady_state = True
+        if isinstance(self.problem, TimeMixin):
+            steady_state = self.problem.steady_state
+
+        if not steady_state:
+            self.problem.approx_delT()
+
         F = self.problem.a - self.problem.L
 
         if isinstance(self.problem, BoundaryMixin):
@@ -80,11 +82,6 @@ class Solver:
                 F, self.u)
         solver = NonlinearVariationalSolver(problem=var_prob,
                                             solver_parameters=self.params)
-
-
-        steady_state = True
-        if isinstance(self.problem, TimeMixin):
-            steady_state = self.problem.steady_state
 
         timestamp = datetime.now().strftime("%d-%b-%Y-%H-%M-%S")
         outfile = File(f'{timestamp}/from_TTiP.pvd')
