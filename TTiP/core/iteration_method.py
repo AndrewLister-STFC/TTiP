@@ -9,11 +9,12 @@ class IterationMethod:
     """
     Dispatch table style class.
     """
+
     def __init__(self, problem):
         """
         Initializer for the IterationMethod.
         Defines new and old T.
-        
+
         Args:
             problem (TimeMixin, Problem):
                 The problem to take T and T_ from.

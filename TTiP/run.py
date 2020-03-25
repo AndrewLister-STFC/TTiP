@@ -11,33 +11,68 @@ from firedrake import (BoxMesh, Constant, Function, FunctionSpace,
 from TTiP.core.problem import SteadyStateProblem, TimeDependantProblem
 from TTiP.core.solver import Solver
 
-extent = [40e-6, 40e-6, 40e-6]
-mesh = BoxMesh(20, 20, 20, *extent)
-V = FunctionSpace(mesh, 'CG', 1)
 
-problem = TimeDependantProblem(mesh=mesh, V=V)
-problem.set_timescale(dt=1e-12, steps=100)
-problem.add_boundary('dirichlet', g=100, domain=[1, 2, 3, 4, 5, 6])
-C = Constant(1.1e27)*1.5*e
-problem.set_C(C)
+def main():
+    # =============================================================================
+    # ===== CREATE MESH ===========================================================
+    # =============================================================================
+    extent = [40e-6, 40e-6, 40e-6]
+    mesh = BoxMesh(20, 20, 20, *extent)
 
-x = SpatialCoordinate(mesh)
-val = 1
-for pos, length in zip(x, extent):
-    val *= sin(pos/length*pi)**2
-S = Function(V).interpolate(1e9*val)
-problem.set_S(S)
+    # =============================================================================
+    # ===== CREATE FUNCTION SPACE =================================================
+    # =============================================================================
+    V = FunctionSpace(mesh, 'CG', 1)
 
-x = SpatialCoordinate(mesh)
-val = 1
-for pos, length in zip(x, extent):
-    val *= sin(2*pos/length*pi)
-problem.T_.interpolate(100 + 1000**val)
-problem.T.assign(problem.T_)
+    # =============================================================================
+    # ===== SETUP PROBLEM =========================================================
+    # =============================================================================
+    problem = TimeDependantProblem(mesh=mesh, V=V)
 
-print('Solving')
-solver = Solver(problem)
+    # =============================================================================
+    # ===== TIME ==================================================================
+    # =============================================================================
+    problem.set_timescale(dt=1e-13, steps=100)
 
-solver.solve()
+    # =============================================================================
+    # ===== PARAMETERS ============================================================
+    # =============================================================================
+    C = Constant(1.1e27)*1.5*e
+    problem.set_C(C)
 
-time.sleep(1)
+    # =============================================================================
+    # ===== SOURCES ===============================================================
+    # =============================================================================
+    x = SpatialCoordinate(mesh)
+    val = 1
+    for pos, length in zip(x, extent):
+        val *= sin(pos/length*pi)**2
+    S = Function(V).interpolate(1e9*val)
+    problem.set_S(S)
+
+    # =============================================================================
+    # ===== BOUNDARIES ============================================================
+    # =============================================================================
+    problem.add_boundary('dirichlet', g=100, domain=[1, 2, 3, 4, 5, 6])
+
+    # =============================================================================
+    # ===== INITIAL VALUE =========================================================
+    # =============================================================================
+    x = SpatialCoordinate(mesh)
+    val = 1
+    for pos, length in zip(x, extent):
+        val *= sin(2*pos/length*pi)
+    problem.T_.interpolate(100 + 1000**val)
+    problem.T.assign(problem.T_)
+
+    # =============================================================================
+    # ===== SOLVE =================================================================
+    # =============================================================================
+    print('Solving')
+    solver = Solver(problem)
+
+    solver.solve(method='Theta', theta=0.5)
+
+
+if __name__ == '__main__':
+    main()

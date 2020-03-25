@@ -57,10 +57,11 @@ class Solver:
             'snes_max_it': 100}
 
     def solve(self, file_path='TTiP_result/solution.pvd',
-              method='BackwardEuler'):
+              method='BackwardEuler', **kwargs):
         """
         Setup and solve the nonlinear problem.
         Save value to file given.
+        Any additional keyword arguments are passed to the iteration method.
 
         Args:
             file_path (string, optional):
@@ -77,7 +78,7 @@ class Solver:
 
         if not steady_state:
             iter_method = IterationMethod(self.problem)
-            F = iter_method.update(F, method)
+            F = iter_method.update(F, method, **kwargs)
             F = self.problem.approx_delT(F)
 
         if isinstance(self.problem, BoundaryMixin):
