@@ -21,7 +21,7 @@ class IterationMethod:
         self.T = problem.T
         self.T_ = problem.T_
 
-    def update(self, F, method='BackwardEuler'):
+    def update(self, F, method='BackwardEuler', **kwargs):
         """
         Update the given F using the correct method.
 
@@ -40,7 +40,7 @@ class IterationMethod:
         if method[0] == '_':
             raise ValueError('Not a valid method.')
         try:
-            return self.__dict__[method](F)
+            return self.__dict__[method](F, **kwargs)
         except KeyError:
             raise ValueError('Not a valid method.')
 
@@ -66,5 +66,35 @@ class IterationMethod:
         Returns:
             Function: THe updated function
         """
-        F = replace(F, {self.T, self.T_})
-        return F
+        return replace(F, {self.T, self.T_})
+
+    def CrankNicolson(self, F):
+        """
+        Crank Nicolson sets T to (T + T_)/2 in the setup that is used.
+
+        Args:
+            F (Function): The function to update.
+
+        Returns:
+            Function: THe updated function
+        """
+        T = 0.5*(self.T + self.T_)
+        return replace(F, {self.T, T})
+
+    def Theta(self, F, theta):
+        """
+        The Theta model sets T to a weighted mean of T and T_.
+        This takes 1 extra argument which is the weighting.
+
+        Setting:
+          theta=0.0 is equivalent to ForwardEuler
+          theta=0.5 is equivalent to CrankNicholson
+          theta=1.0 is equivalent to BackwardEuler
+
+        Args:
+            F (Function): The function to update.
+            theta (float):
+                Weight of T (the weight of T_ is 1-theta)
+        """
+        T = theta*self.T + (1-theta)*self.T_
+        return replace(F, {self.T: T})

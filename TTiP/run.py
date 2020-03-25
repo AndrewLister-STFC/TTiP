@@ -14,7 +14,6 @@ from TTiP.solver import Solver
 extent = [40e-6, 40e-6, 40e-6]
 mesh = BoxMesh(20, 20, 20, *extent)
 V = FunctionSpace(mesh, 'CG', 1)
-print(V.dim())
 
 problem = TimeDependantProblem(mesh=mesh, V=V)
 problem.set_timescale(dt=1e-12, steps=100)

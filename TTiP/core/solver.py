@@ -56,23 +56,28 @@ class Solver:
             'snes_max_L_solve_fail': 10,
             'snes_max_it': 100}
 
-    def solve(self, file_path='TTiP_result/solution.pvd'):
+    def solve(self, file_path='TTiP_result/solution.pvd',
+              method='BackwardEuler'):
         """
         Setup and solve the nonlinear problem.
         Save value to file given.
 
         Args:
-            file_path (string):
+            file_path (string, optional):
                 The path to save the pvd file to.
                 vtk files will be generated in the same directory as the pvd.
                 It is recommended that this is a separate drectory per run.
+                Defaults to 'TTiP_result/solution.pvd'.
+            method (string, optional):
+                If not steady state, this is used to define the method for
+                time iterations. Defaults to 'BackwardEuler'.
         """
         F = self.problem.a - self.problem.L
         steady_state = self.is_steady_state()
 
         if not steady_state:
             iter_method = IterationMethod(self.problem)
-            F = iter_method.update(F, 'BackwardEuler')
+            F = iter_method.update(F, method)
             F = self.problem.approx_delT(F)
 
         if isinstance(self.problem, BoundaryMixin):
