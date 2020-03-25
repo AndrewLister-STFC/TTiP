@@ -6,7 +6,7 @@ from datetime import datetime
 from firedrake import (H1, File, NonlinearVariationalProblem,
                        NonlinearVariationalSolver)
 
-from TTiP.iteration_method import IterationMethod
+from TTiP.core.iteration_method import IterationMethod
 from TTiP.mixins.boundaries import BoundaryMixin
 from TTiP.mixins.time import TimeMixin
 

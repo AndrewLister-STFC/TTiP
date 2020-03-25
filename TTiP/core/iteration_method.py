@@ -40,7 +40,7 @@ class IterationMethod:
         if method[0] == '_':
             raise ValueError('Not a valid method.')
         try:
-            return self.__dict__[method](F, **kwargs)
+            return getattr(self, method)(F, **kwargs)
         except KeyError:
             raise ValueError('Not a valid method.')
 

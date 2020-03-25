@@ -6,10 +6,10 @@ import time
 
 from scipy.constants import e, pi
 
-from firedrake import BoxMesh, Constant, FunctionSpace, SpatialCoordinate, sin, Function
-from TTiP.problem import (SteadyStateProblem,
-                          TimeDependantProblem)
-from TTiP.solver import Solver
+from firedrake import (BoxMesh, Constant, Function, FunctionSpace,
+                       SpatialCoordinate, sin)
+from TTiP.core.problem import SteadyStateProblem, TimeDependantProblem
+from TTiP.core.solver import Solver
 
 extent = [40e-6, 40e-6, 40e-6]
 mesh = BoxMesh(20, 20, 20, *extent)
