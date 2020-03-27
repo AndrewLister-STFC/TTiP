@@ -20,10 +20,10 @@ class ConstantBuilder(FunctionBuilder):
     def build(self):
         """
         Build the constant valued firedrake function.
-        
+
         Raises:
             AttributeError: If required properties are not defined.
-        
+
         Returns:
             Function: firedrake Constant set to te given value.
         """
