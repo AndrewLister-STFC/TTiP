@@ -36,7 +36,9 @@ class BoundaryMixin:
         bcs (list<firedrake.DirichletBC>):
             A list of any dirichlet contitions that are defined.
             These can't be worked into the variational problem directly.
-    """
+        _has_boundary (bool);
+            Flag that is set to true when a boundary has been set.
+"""
 
     # Variables that must be present for the mixin.
     # These will be replaced by the init in te class this is mixed into.
@@ -59,6 +61,7 @@ class BoundaryMixin:
         super().__init__(*args, **kwargs)
 
         self.bcs = []
+        self._has_boundary = None
 
     def add_boundary(self, boundary_type, **kwargs):
         """
@@ -88,26 +91,52 @@ class BoundaryMixin:
                              'boundaries are: {}.'.format(
                                  boundary_type, ', '.join(dispatcher.keys())))
 
-    def add_dirichlet(self, g, domain):
+    def add_dirichlet(self, g, surface):
         """
         Adds dirichlet boundary conditions to the problem.
 
         Args:
             g (Function, int, or float):
                 The function to apply on the boundary.
-            domain (int or list of int):
+            surface (int or list of int):
                 The index of the boundary to apply the condition to.
         """
+        # Explicitly check against False as None should not be caught here.
+        if self._has_boundary is False:
+            raise AttributeError('Cannot add boundary after declaring that '
+                                 'there are no boundaries')
         norm = FacetNormal(self.mesh)
 
         if isinstance(g, (float, int)):
             g = Constant(g)
 
-        dbc = DirichletBC(self.V, g, domain)
-        self.bcs.append(dbc)
-
         integrand = -1*self.K*self.v*dot(grad(self.T), norm)
-        try:
-            self.a += sum(integrand*ds(d) for d in domain)
-        except TypeError:
-            self.a += integrand*ds(domain)
+
+        if surface == 'all':
+            dbc = DirichletBC(V=self.V, g=g, sub_domain="on_boundary")
+            self.a += integrand*ds
+        else:
+            dbc = DirichletBC(V=self.V, g=g, sub_domain=surface)
+            try:
+                self.a += sum(integrand*ds(s) for s in surface)
+            except TypeError:
+                self.a += integrand*ds(surface)
+
+        self.bcs.append(dbc)
+        self._has_boundary = True
+
+    def set_no_boundary(self):
+        """
+        Declare that the problem will have no boundaries.
+        
+        Raises:
+            AttributeError: If boundaries have already been added.
+        """
+        # Explicitly check for True to be consistent with other method.
+        if self._has_boundary is True:
+            raise AttributeError('Cannot set no boundary after boundaries have'
+                                 ' been set')
+
+        norm = FacetNormal(self.mesh)
+        self.a += -1*self.K*self.v*dot(grad(self.T), norm)*ds
+        self._has_boundary = False

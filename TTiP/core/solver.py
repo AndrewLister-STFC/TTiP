@@ -56,7 +56,7 @@ class Solver:
             'snes_max_L_solve_fail': 10,
             'snes_max_it': 100}
 
-    def solve(self, file_path='TTiP_result/solution.pvd',
+    def solve(self, file_path='ttip_result/solution.pvd',
               method='BackwardEuler', **kwargs):
         """
         Setup and solve the nonlinear problem.

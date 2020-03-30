@@ -27,5 +27,5 @@ class SourcesParser:
             conf (configparser section or dict):
                 The full SOURCES section from the config.
         """
-        sources = FunctionBuilderFactory.create_function_list(conf)
+        sources = FunctionBuilderFactory.create_function_dict(conf)
         self.source = sum(sources.values)
