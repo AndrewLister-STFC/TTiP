@@ -2,6 +2,7 @@
 This holds all functions related to parsing the MESH section of the config file
 """
 import firedrake
+from TTiP.utils.parse_args import process_arg
 
 
 class MeshParser:
@@ -51,45 +52,11 @@ class MeshParser:
         if args is not None:
             args = args.split(',')
             for arg in args:
-                arg = self._process_arg(arg)
+                arg = process_arg(arg)
                 processed_args.append(arg)
 
         kwargs = {}
         for k, v in conf.items():
-            kwargs[k] = self._process_arg(v)
+            kwargs[k] = process_arg(v)
 
         self.mesh = mesh_cls(*processed_args, **kwargs)
-
-    @staticmethod
-    def _process_arg(val):
-        """
-        Convert a string into the correct value.
-        e.g. "2" -> 2 (int)
-             "false" -> False (bool)
-             "1.8" -> 1.8 (float)
-        
-        Args:
-            val (string): The value to convert.
-        
-        Returns:
-            (bool, int, float, string): The converted value.
-        """
-        val = val.strip()
-        if val.lower() == 'true':
-            return True
-        if val.lower() == 'false':
-            return False
-
-        try:
-            val = int(val)
-            return val
-        except ValueError:
-            pass
-
-        try:
-            val = float(arg)
-            return val
-        except ValueError:
-            pass
-
-        return val

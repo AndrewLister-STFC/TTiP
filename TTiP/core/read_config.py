@@ -7,10 +7,11 @@ import os
 from inspect import getfile
 
 from TTiP import resources
+from TTiP.process_inputs.boundary_conds import BoundaryCondsParser
+from TTiP.process_inputs.parameters import ParametersParser
 from TTiP.process_inputs.parsers.mesh import MeshParser
-#from TTiP.process_inputs.bounds import BoundaryCondsParser
-#from TTiP.process_inputs.parameters import ParametersParser
 from TTiP.process_inputs.parsers.time import TimeParser
+from TTiP.process_inputs.sources import SourcesParser
 
 
 class Config:
@@ -23,11 +24,15 @@ class Config:
 
         self.conf_parser.read(filename)
 
-    def get_boundaries(self):
-        pass
+    def get_boundary_conds(self):
+        parser = BoundaryCondsParser()
+        parser.parse(self.conf_parser['BOUNDARIES'])
+        return 
 
     def get_sources(self):
-        pass
+        parser = SourcesParser()
+        parser.parse(self.conf_parser['SOURCES'])
+        return parser.source
 
     def get_time(self):
         parser = TimeParser()
@@ -40,4 +45,6 @@ class Config:
         return parser.mesh
 
     def get_parameters(self):
-        pass
+        parser = ParametersParser()
+        parser.parse(self.conf_parser['PARAMETERS'])
+        return parser.density
