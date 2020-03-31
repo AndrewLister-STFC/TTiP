@@ -1,11 +1,11 @@
 """
 Uses the files in process_inputs to parse relevent sections of the config file.
 """
-
 import configparser
 import os
 from inspect import getfile
 
+from firedrake import FunctionSpace
 from TTiP import resources
 from TTiP.parsers.boundary_conds import BoundaryCondsParser
 from TTiP.parsers.initial_vals import InitialValParser
@@ -43,6 +43,9 @@ class Config:
 
         self.conf_parser.read(filename)
 
+        self._mesh = None
+        self._V = None
+
     def get_boundary_conds(self):
         """
         Get the boundary conditions as a list of dictionaries.
@@ -50,7 +53,9 @@ class Config:
         Returns:
             list<dict>: All given boundary conditions.
         """
-        parser = BoundaryCondsParser()
+        if self._mesh is None:
+            self.get_mesh()
+        parser = BoundaryCondsParser(self._mesh, self._V)
         parser.parse(self.conf_parser['BOUNDARIES'])
         return parser.bcs
 
@@ -61,7 +66,9 @@ class Config:
         Returns:
             Function: The source term (a sum of all given functions)
         """
-        parser = SourcesParser()
+        if self._mesh is None:
+            self.get_mesh()
+        parser = SourcesParser(self._mesh, self._V)
         parser.parse(self.conf_parser['SOURCES'])
         return parser.source
 
@@ -85,9 +92,13 @@ class Config:
         Returns:
             Mesh: The initialised mesh for the problem.
         """
-        parser = MeshParser()
-        parser.parse(self.conf_parser['MESH'])
-        return parser.mesh
+        if self._mesh is None:
+            parser = MeshParser()
+            parser.parse(self.conf_parser['MESH'])
+            self._mesh = parser.mesh
+            self._V = FunctionSpace(self._mesh, 'CG', 1)
+
+        return self._mesh, self._V
 
     def get_parameters(self):
         """
@@ -97,7 +108,9 @@ class Config:
         Returns:
             Function: The density of the plasma
         """
-        parser = ParametersParser()
+        if self._mesh is None:
+            self.get_mesh()
+        parser = ParametersParser(self._mesh, self._V)
         parser.parse(self.conf_parser['PARAMETERS'])
         return parser.density
 
@@ -108,7 +121,9 @@ class Config:
         Returns:
             Function: The initial value term (a sum of all given functions)
         """
-        parser = InitialValParser()
+        if self._mesh is None:
+            self.get_mesh()
+        parser = InitialValParser(self._mesh, self._V)
         parser.parse(self.conf_parser['INITIALVALUE'])
         return parser.initial_val
 

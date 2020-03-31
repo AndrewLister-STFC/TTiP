@@ -97,7 +97,7 @@ class Solver:
                           target_degree=1,
                           target_continuity=H1)
         else:
-            self.u.assign(self.problem.T_)
+            self.problem.T_.assign(self.u)
             last_perc = 0
             for i in range(self.problem.steps):
                 solver.solve()

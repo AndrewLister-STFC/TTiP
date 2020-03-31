@@ -51,11 +51,8 @@ def run(config_file, debug=False):
 
     config = Config(config_file)
 
-    # Setup mesh
-    mesh = config.get_mesh()
-
-    # Setup function space
-    V = FunctionSpace(mesh, 'CG', 1)
+    # Setup mesh and function space
+    mesh, V = config.get_mesh()
 
     # Set up timescale
     steps, dt, t_max = config.get_time()
@@ -65,10 +62,10 @@ def run(config_file, debug=False):
         problem = TimeDependantProblem(mesh=mesh, V=V)
         problem.set_timescale(steps=steps, dt=dt, t_max=t_max)
 
-    # Set up parameters
-    density = config.get_parameters()
-    C = 1.5*e*density
-    problem.set_C(C)
+        # Set up parameters
+        density = config.get_parameters()
+        C = 1.5*e*density
+        problem.set_C(C)
 
     # Set up source
     source = config.get_sources()

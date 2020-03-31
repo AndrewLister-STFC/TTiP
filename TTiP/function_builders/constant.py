@@ -1,6 +1,6 @@
 """
-This file holds the ConstantBuolder class which is used to build constant
-valued funcions.
+This file holds the ConstantBuilder class which is used to build constant
+valued functions.
 """
 from firedrake import Constant
 

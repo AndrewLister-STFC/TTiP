@@ -1,9 +1,10 @@
 """
 This holds all functions related to parsing the TIME section of the config file
 """
+from TTiP.parsers.base import SectionParser
 
 
-class TimeParser:
+class TimeParser(SectionParser):
     """
     A parser for the time section of the config file.
 
@@ -21,6 +22,7 @@ class TimeParser:
         """
         Initialiser for the TimeParser class.
         """
+        super().__init__()
         self.steps = None
         self.dt = None
         self.max_t = None

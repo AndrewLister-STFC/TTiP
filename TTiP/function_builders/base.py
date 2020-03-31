@@ -29,14 +29,20 @@ class FunctionBuilder(ABC):
     Attributes:
         _props (dict):
             Dynamic storage for the values of the properties.
+        mesh (Mesh):
+            The mesh that function will be interpolated over.
+        V (FunctionSpace):
+            The function space that functions must be a member of.
     """
 
     properties = {}
 
-    def __init__(self):
+    def __init__(self, mesh, V):
         """
         Initialiser for the FunctionBuilder base class.
         """
+        self.mesh = mesh
+        self.V = V
         self._props = {k: None for k in self.properties}
 
     def assign(self, name, value):
@@ -46,12 +52,14 @@ class FunctionBuilder(ABC):
         type is compatible.
 
         Args:
-            name (string): [description]
-            value ([type]): [description]
+            name (string):
+                The name of the property to set.
+            value (varies by property - see Required Properties section):
+                The value to set the property to.
 
         Raises:
-            TypeError: [description]
-            KeyError: [description]
+            TypeError: If property is being set to the wrong type.
+            KeyError: If property is not valid.
         """
         if name in self.properties:
             if isinstance(value, self.properties[name]):

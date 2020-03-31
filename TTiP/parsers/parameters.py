@@ -1,10 +1,10 @@
 """
 This contains the parser for parsing the PARAMETERS section of the config.
 """
-from TTiP.function_builders.factory import FunctionBuilderFactory
+from TTiP.parsers.base import FunctionSectionParser
 
 
-class ParametersParser:
+class ParametersParser(FunctionSectionParser):
     """
     A parser for the parameters section of the config file.
 
@@ -14,10 +14,17 @@ class ParametersParser:
     """
     # pylint: disable=too-few-public-methods
 
-    def __init__(self):
+    def __init__(self, mesh, V):
         """
         Initializer for the ParametersParser class.
+
+        Args:
+            mesh (Mesh):
+                The mesh that the functions should be interpolated over.
+            V (FunctionSpace):
+                The function space that the functions should belong to.
         """
+        super().__init__(mesh, V)
         self.density = None
 
     def parse(self, conf):
@@ -28,5 +35,5 @@ class ParametersParser:
             conf (configparser section or dict):
                 The full PARAMETERS section from the config.
         """
-        all_functions = FunctionBuilderFactory.create_function_dict(conf)
+        all_functions = self.factory.create_function_dict(conf)
         self.density = all_functions['density']

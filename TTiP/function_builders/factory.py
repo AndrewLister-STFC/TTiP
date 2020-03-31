@@ -19,9 +19,20 @@ class FunctionBuilderFactory:
     Also provdes a utility function to create the function given a list of
     properties.
     """
+    def __init__(self, mesh, V):
+        """
+        Initialiser for the FunctionBuilderFactory
 
-    @staticmethod
-    def create_function_builder(function_type):
+        Args:
+            mesh (Mesh):
+                The mesh that the function will interpolate over.
+            V (FunctionSpace):
+                The function space that the function should belong to.
+        """
+        self.mesh = mesh
+        self.V = V
+
+    def create_function_builder(self, function_type):
         """
         Create a FunctionBuilder subclass instance from the associated
         filename.
@@ -50,10 +61,9 @@ class FunctionBuilderFactory:
             raise RuntimeError('Could not get unique function builder for {}.'
                                ''.format(function_type))
 
-        return classes[0][1]()
+        return classes[0][1](mesh=self.mesh, V=self.V)
 
-    @staticmethod
-    def create_function(function_type, **properties):
+    def create_function(self, function_type, **properties):
         """
         Create a fully initialised function and return it.
 
@@ -69,16 +79,14 @@ class FunctionBuilderFactory:
         Returns:
             Function: Initialised function for use with firedrake.
         """
-        func_builder = \
-            FunctionBuilderFactory.create_function_builder(function_type)
+        func_builder = self.create_function_builder(function_type)
 
         for k, v in properties.items():
             func_builder.assign(k, v)
 
         return func_builder.build()
 
-    @staticmethod
-    def create_function_dict(conf):
+    def create_function_dict(self, conf):
         """
         Create a dictionary of all functions from a dictionary
         (or configparser).
@@ -104,7 +112,6 @@ class FunctionBuilderFactory:
         funcs_dict = {}
         for name, f_dict in all_funcs.items():
             f_type = f_dict.pop('type')
-            funcs_dict[name.lower()] = \
-                FunctionBuilderFactory.create_function(f_type, **f_dict)
+            funcs_dict[name.lower()] = self.create_function(f_type, **f_dict)
 
         return funcs_dict

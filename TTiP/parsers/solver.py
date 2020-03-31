@@ -2,9 +2,10 @@
 This contains the parser for parsing the SOLVER section of the config.
 """
 from TTiP.parsers.parse_args import process_arg
+from TTiP.parsers.base import SectionParser
 
 
-class SolverParser:
+class SolverParser(SectionParser):
     """
     A parser for the solver section of the config file.
 
@@ -22,6 +23,7 @@ class SolverParser:
         """
         Initializer for the SolverParser class.
         """
+        super().__init__()
         self.file_path = None
         self.method = None
         self.params = {}

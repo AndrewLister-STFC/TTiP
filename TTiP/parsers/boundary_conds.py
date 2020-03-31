@@ -1,11 +1,11 @@
 """
 This contains the parser for parsing the BOUNDARIES section of the config.
 """
-from TTiP.function_builders.factory import FunctionBuilderFactory
+from TTiP.parsers.base import FunctionSectionParser
 from TTiP.parsers.parse_args import process_arg
 
 
-class BoundaryCondsParser:
+class BoundaryCondsParser(FunctionSectionParser):
     """
     A parser for the boundaries section of the config file.
 
@@ -15,10 +15,17 @@ class BoundaryCondsParser:
     """
     # pylint: disable=too-few-public-methods
 
-    def __init__(self):
+    def __init__(self, mesh, V):
         """
         Initializer for the BoundaryCondsParser class.
+
+        Args:
+            mesh (Mesh):
+                The mesh that the function will interpolate over.
+            V (FunctionSpace):
+                The function space that the function should belong to.
         """
+        super().__init__(mesh, V)
         self.bcs = None
 
     def parse(self, conf):
@@ -45,7 +52,7 @@ class BoundaryCondsParser:
             for k, v in b.items():
                 if isinstance(v, dict) and 'type' in v:
                     f_type = v.pop('type')
-                    func = FunctionBuilderFactory.create_function(f_type, **v)
+                    func = self.factory.create_function(f_type, **v)
                     boundaries[k] = func
 
         self.bcs = list(boundaries.values())
