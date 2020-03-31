@@ -1,3 +1,7 @@
+"""
+This is the main entrypoint for TTiP, and can be used as a script or
+entrypoint.
+"""
 import argparse
 import sys
 
@@ -10,6 +14,12 @@ from TTiP.core.solver import Solver
 
 
 def get_argparser():
+    """
+    Get the argparser.
+
+    Returns:
+        ArgumentParser: The object that will handle command line arguments.
+    """
     epilog = '''Usage Examples:
     $ ttip my_problem.ini
     $ ttip -d myproblem.ini
@@ -32,6 +42,15 @@ def get_argparser():
 
 
 def run(config_file, debug=False):
+    """
+    Run the solve on the given problem definition config file.
+
+    Args:
+        config_file (string): The path to the config file to run.
+        debug (bool, optional): Print debug output. Defaults to False.
+    """
+    # pylint: disable=too-many-locals
+
     config = Config(config_file)
 
     # Setup mesh
@@ -75,6 +94,9 @@ def run(config_file, debug=False):
 
 
 def main():
+    """
+    Parse command line arguments and call run.
+    """
     parser = get_argparser()
 
     if len(sys.argv) == 1:
