@@ -15,6 +15,8 @@ class TimeParser:
         max_t (float):
             The time to iterate until.
     """
+    # pylint: disable=too-few-public-methods
+
     def __init__(self):
         """
         Initialiser for the TimeParser class.

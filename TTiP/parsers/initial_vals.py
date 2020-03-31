@@ -1,8 +1,7 @@
 """
 This contains the parser for parsing the INITALVALUE section of the config.
 """
-from TTiP.process_inputs.function_builders.factory import \
-    FunctionBuilderFactory
+from TTiP.function_builders.factory import FunctionBuilderFactory
 
 
 class InitialValParser:
@@ -13,6 +12,8 @@ class InitialValParser:
         initial_val (Function):
             The sum of all the initial value terms.
     """
+    # pylint: disable=too-few-public-methods
+
     def __init__(self):
         """
         Initializer for the InitialValParser class.

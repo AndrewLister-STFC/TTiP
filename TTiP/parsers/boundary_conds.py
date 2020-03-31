@@ -1,9 +1,8 @@
 """
 This contains the parser for parsing the BOUNDARIES section of the config.
 """
-from TTiP.process_inputs.function_builders.factory import \
-    FunctionBuilderFactory
-from TTiP.utils.parse_args import process_arg
+from TTiP.function_builders.factory import FunctionBuilderFactory
+from TTiP.parsers.parse_args import process_arg
 
 
 class BoundaryCondsParser:
@@ -14,6 +13,8 @@ class BoundaryCondsParser:
         bcs (list<dict>):
             A list of the boundary conditions.
     """
+    # pylint: disable=too-few-public-methods
+
     def __init__(self):
         """
         Initializer for the BoundaryCondsParser class.
@@ -38,7 +39,7 @@ class BoundaryCondsParser:
                     tmp_dict[name] = {}
                 tmp_dict = tmp_dict[name]
 
-            tmp_dict[name[-1]] = process_arg(v)
+            tmp_dict[names[-1]] = process_arg(v)
 
         for b in boundaries.values():
             for k, v in b.items():

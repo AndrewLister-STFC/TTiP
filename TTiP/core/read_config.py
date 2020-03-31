@@ -7,13 +7,13 @@ import os
 from inspect import getfile
 
 from TTiP import resources
-from TTiP.process_inputs.parsers.boundary_conds import BoundaryCondsParser
-from TTiP.process_inputs.parsers.initial_vals import InitialValParser
-from TTiP.process_inputs.parsers.mesh import MeshParser
-from TTiP.process_inputs.parsers.parameters import ParametersParser
-from TTiP.process_inputs.parsers.solver import SolverParser
-from TTiP.process_inputs.parsers.sources import SourcesParser
-from TTiP.process_inputs.parsers.time import TimeParser
+from TTiP.parsers.boundary_conds import BoundaryCondsParser
+from TTiP.parsers.initial_vals import InitialValParser
+from TTiP.parsers.mesh import MeshParser
+from TTiP.parsers.parameters import ParametersParser
+from TTiP.parsers.solver import SolverParser
+from TTiP.parsers.sources import SourcesParser
+from TTiP.parsers.time import TimeParser
 
 
 class Config:
@@ -115,7 +115,7 @@ class Config:
     def get_solver_params(self):
         """
         Get the solver arguments.
-        
+
         Returns:
             string, string, dict: The file_path, the method, any params.
         """

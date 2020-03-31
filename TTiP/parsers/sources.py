@@ -1,8 +1,7 @@
 """
 This contains the parser for parsing the SOURCES section of the config.
 """
-from TTiP.process_inputs.function_builders.factory import \
-    FunctionBuilderFactory
+from TTiP.function_builders.factory import FunctionBuilderFactory
 
 
 class SourcesParser:
@@ -13,6 +12,8 @@ class SourcesParser:
         source (Function):
             The sum of all the source terms.
     """
+    # pylint: disable=too-few-public-methods
+
     def __init__(self):
         """
         Initializer for the SourcesParser class.

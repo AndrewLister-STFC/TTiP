@@ -4,9 +4,9 @@ This file stores the base problem and any created by adding mixins.
 from firedrake import Function, TestFunction, dot, dx, grad, replace
 
 
-from TTiP.mixins.boundaries import BoundaryMixin
-from TTiP.mixins.conductivity import SpitzerHarmMixin
-from TTiP.mixins.time import TimeMixin
+from TTiP.problem_mixins.boundaries import BoundaryMixin
+from TTiP.problem_mixins.conductivity import SpitzerHarmMixin
+from TTiP.problem_mixins.time import TimeMixin
 
 
 class Problem:
@@ -36,6 +36,7 @@ class Problem:
         L (firedrake.Function):
             A function used to combine parts not in 'a' (see above).
     """
+    # pylint: disable=too-few-public-methods
 
     def __init__(self, mesh, V):
         """
@@ -97,7 +98,6 @@ class SteadyStateProblem(SpitzerHarmMixin, BoundaryMixin, Problem):
     A steady state problem with no time dependance.
     This solves the problem where dT/dt=0.
     """
-    pass
 
 
 class TimeDependantProblem(SpitzerHarmMixin, TimeMixin, BoundaryMixin,
@@ -106,4 +106,3 @@ class TimeDependantProblem(SpitzerHarmMixin, TimeMixin, BoundaryMixin,
     A full time dependant problem.
     This includes all terms.
     """
-    pass

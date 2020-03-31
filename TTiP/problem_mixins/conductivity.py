@@ -26,6 +26,7 @@ class SpitzerHarmMixin:
         Z (Function):
             The ionisation term for the problem.
     """
+    # pylint: disable=too-few-public-methods
 
     # Variables that must be present for the mixin.
     # These will be replaced by the init in te class this is mixed into.
@@ -47,13 +48,33 @@ class SpitzerHarmMixin:
         self.K = K
 
     def _K(self):
+        """
+        Create the function that defines the conductivity.
+
+        Returns:
+            Function: The Spitzer-Harm conductivity
+        """
         tmp = 288*pi*sqrt(2)*epsilon_0**2/sqrt(e*m_e)
         tmp = tmp*pow(self.T, 5/2)/(self.coulomb_ln*self.Z)
 
         return tmp
 
     def _coulomb_ln(self):
+        """
+        Create the coulomb logarithm.
+
+        Returns:
+            Function: The coulomb log.
+        """
+        # pylint: disable=no-self-use
         return Constant(10)
 
     def _Z(self):
+        """
+        Create the ionization energy.
+
+        Returns:
+            Function: The ionization energy.
+        """
+        # pylint: disable=no-self-use
         return Constant(12)

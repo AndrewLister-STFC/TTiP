@@ -2,7 +2,7 @@
 This holds all functions related to parsing the MESH section of the config file
 """
 import firedrake
-from TTiP.utils.parse_args import process_arg
+from TTiP.parsers.parse_args import process_arg
 
 
 class MeshParser:
@@ -14,6 +14,7 @@ class MeshParser:
             This variable holds the instantiated mesh once it has been
             generated.
     """
+    # pylint: disable=too-few-public-methods
 
     def __init__(self):
         """

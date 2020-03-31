@@ -128,7 +128,7 @@ class BoundaryMixin:
     def set_no_boundary(self):
         """
         Declare that the problem will have no boundaries.
-        
+
         Raises:
             AttributeError: If boundaries have already been added.
         """

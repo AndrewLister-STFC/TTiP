@@ -1,8 +1,7 @@
 """
 This contains the parser for parsing the PARAMETERS section of the config.
 """
-from TTiP.process_inputs.function_builders.factory import \
-    FunctionBuilderFactory
+from TTiP.function_builders.factory import FunctionBuilderFactory
 
 
 class ParametersParser:
@@ -13,6 +12,8 @@ class ParametersParser:
         density (Function):
             The sum of all the function specified for density.
     """
+    # pylint: disable=too-few-public-methods
+
     def __init__(self):
         """
         Initializer for the ParametersParser class.

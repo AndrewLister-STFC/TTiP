@@ -4,7 +4,7 @@ valued funcions.
 """
 from firedrake import Constant
 
-from TTiP.process_inputs.function_builders.base import FunctionBuilder
+from TTiP.function_builders.base import FunctionBuilder
 
 
 class ConstantBuilder(FunctionBuilder):
@@ -15,6 +15,7 @@ class ConstantBuilder(FunctionBuilder):
         value (int, float):
             This is the value that the constant will have.
     """
+    # pylint: disable=too-few-public-methods
     properties = {'value': (int, float)}
 
     def build(self):

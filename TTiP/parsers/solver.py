@@ -1,7 +1,7 @@
 """
 This contains the parser for parsing the SOLVER section of the config.
 """
-from TTiP.utils.parse_args import process_arg
+from TTiP.parsers.parse_args import process_arg
 
 
 class SolverParser:
@@ -16,6 +16,8 @@ class SolverParser:
         params (dict):
             Any parameters for the selected method.
     """
+    # pylint: disable=too-few-public-methods
+
     def __init__(self):
         """
         Initializer for the SolverParser class.

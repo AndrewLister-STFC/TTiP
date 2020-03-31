@@ -2,13 +2,11 @@
 This file is used to test the solve.
 """
 
-import time
-
 from scipy.constants import e, pi
 
 from firedrake import (BoxMesh, Constant, Function, FunctionSpace,
                        SpatialCoordinate, sin)
-from TTiP.core.problem import SteadyStateProblem, TimeDependantProblem
+from TTiP.core.problem import TimeDependantProblem
 from TTiP.core.solver import Solver
 
 

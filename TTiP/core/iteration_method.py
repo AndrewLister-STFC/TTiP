@@ -53,8 +53,9 @@ class IterationMethod:
             F (Function): The function to update.
 
         Returns:
-            Function: THe updated function
+            Function: The updated function
         """
+        # pylint: disable=no-self-use
         return F
 
     def ForwardEuler(self, F):

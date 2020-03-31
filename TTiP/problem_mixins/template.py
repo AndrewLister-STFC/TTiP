@@ -2,7 +2,6 @@
 Contains the <name> class for extending problems.
 """
 
-
 class <name>:
     """
     Class to extend Problems as a mixin.

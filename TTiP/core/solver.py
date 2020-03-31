@@ -1,14 +1,12 @@
 """
 This file holds the solver class which is used to run the FEM solve.
 """
-from datetime import datetime
-
 from firedrake import (H1, File, NonlinearVariationalProblem,
                        NonlinearVariationalSolver)
 
 from TTiP.core.iteration_method import IterationMethod
-from TTiP.mixins.boundaries import BoundaryMixin
-from TTiP.mixins.time import TimeMixin
+from TTiP.problem_mixins.boundaries import BoundaryMixin
+from TTiP.problem_mixins.time import TimeMixin
 
 
 class Solver:
@@ -90,8 +88,7 @@ class Solver:
         solver = NonlinearVariationalSolver(problem=var_prob,
                                             solver_parameters=self.params)
 
-        timestamp = datetime.now().strftime("%d-%b-%Y-%H-%M-%S")
-        outfile = File(f'{timestamp}/from_TTiP.pvd')
+        outfile = File(file_path)
         outfile.write(self.u, target_degree=1, target_continuity=H1)
 
         if steady_state:

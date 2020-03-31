@@ -46,6 +46,7 @@ class TimeMixin:
             Toggle whether solving steady state (dT/dt = 0) or time dependent
             problem.
     """
+    # pylint: disable=too-many-instance-attributes
 
     # Variables that must be present for the mixin.
     # These will be replaced by the init in te class this is mixed into.

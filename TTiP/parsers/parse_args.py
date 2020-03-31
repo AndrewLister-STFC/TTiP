@@ -1,3 +1,8 @@
+"""
+Utility module for parsing args.
+"""
+
+
 def process_arg(val):
     """
     Convert a string into the correct value.
