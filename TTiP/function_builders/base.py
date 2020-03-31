@@ -11,7 +11,7 @@ FunctionBuilders must define:
         This should take no arguments and return a firedrake Function-like
         object.
 """
-from abc import ABC
+from abc import ABC, abstractmethod
 
 
 class FunctionBuilder(ABC):
@@ -64,6 +64,7 @@ class FunctionBuilder(ABC):
             raise KeyError('Property "{}" is not valid with this function.'
                            ''.format(name))
 
+    @abstractmethod
     def build(self):
         """
         Return the Function that can be used by firedrake.

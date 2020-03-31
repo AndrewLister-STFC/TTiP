@@ -29,4 +29,4 @@ class SourcesParser:
                 The full SOURCES section from the config.
         """
         sources = FunctionBuilderFactory.create_function_dict(conf)
-        self.source = sum(sources.values)
+        self.source = sum(sources.values())

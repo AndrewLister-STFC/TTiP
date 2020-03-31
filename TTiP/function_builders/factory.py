@@ -37,15 +37,18 @@ class FunctionBuilderFactory:
         Returns:
             FunctionBuilder: Initialised FunctionBuilder subclass.
         """
-        module = import_module('.' + function_type, __package__)
+        module = import_module('.' + function_type.lower(), __package__)
 
         classes = getmembers(
-            module, lambda m: isclass(m)and not isabstract(m)
+            module, lambda m: isclass(m) and not isabstract(m)
             and issubclass(m, FunctionBuilder)
             )
 
         if len(classes) != 1:
-            raise RuntimeError('Could not get unique function builder.')
+            for c in classes:
+                print(c)
+            raise RuntimeError('Could not get unique function builder for {}.'
+                               ''.format(function_type))
 
         return classes[0][1]()
 

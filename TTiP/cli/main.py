@@ -30,12 +30,10 @@ def get_argparser():
         formatter_class=argparse.RawDescriptionHelpFormatter)
 
     parser.add_argument('-d', '--debug',
-                        metavar='DEBUG',
                         action='store_true',
                         help='Run in debug mode')
     parser.add_argument('config',
-                        metavar='CONFIG FILE',
-                        nargs='1',
+                        nargs=1,
                         help='Path to problem definition config file.')
 
     return parser
