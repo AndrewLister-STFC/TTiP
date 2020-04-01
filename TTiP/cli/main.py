@@ -4,6 +4,7 @@ entrypoint.
 """
 import argparse
 import sys
+import time
 
 from scipy.constants import e
 
@@ -11,6 +12,7 @@ from firedrake import FunctionSpace
 from TTiP.core.problem import SteadyStateProblem, TimeDependantProblem
 from TTiP.core.read_config import Config
 from TTiP.core.solver import Solver
+from TTiP.util.logger import setup_logger
 
 
 def get_argparser():
@@ -33,7 +35,6 @@ def get_argparser():
                         action='store_true',
                         help='Run in debug mode')
     parser.add_argument('config',
-                        nargs=1,
                         help='Path to problem definition config file.')
 
     return parser
@@ -48,12 +49,18 @@ def run(config_file, debug=False):
         debug (bool, optional): Print debug output. Defaults to False.
     """
     # pylint: disable=too-many-locals
+    logger = setup_logger(debug=debug)
 
+    logger.info('Running TTiP on {}'.format(config_file))
     config = Config(config_file)
 
+    logger.info('Setting up the problem.')
+    start_time = time.time()
+    logger.debug('Building mesh..')
     # Setup mesh and function space
     mesh, V = config.get_mesh()
 
+    logger.debug('Setting timescales..')
     # Set up timescale
     steps, dt, t_max = config.get_time()
     if steps is None and dt is None and t_max is None:
@@ -67,10 +74,12 @@ def run(config_file, debug=False):
         C = 1.5*e*density
         problem.set_C(C)
 
+    logger.debug('Building sources..')
     # Set up source
     source = config.get_sources()
     problem.set_S(source)
 
+    logger.debug('Building boundary conditions..')
     # Set up boundary conditions
     bcs = config.get_boundary_conds()
     for bc in bcs:
@@ -78,14 +87,20 @@ def run(config_file, debug=False):
     if not bcs:
         problem.set_no_boundary()
 
+    logger.debug('Building initial value..')
     # Set up initial value
     initial_val = config.get_inital_val()
     problem.T.assign(initial_val)
 
+    logger.info('Problem set up ({:.1f}s)'.format(time.time()-start_time))
+    logger.info('Running the solve.')
+    start_time = time.time()
     # Solve
     file_path, method, params = config.get_solver_params()
     solver = Solver(problem)
     solver.solve(file_path=file_path, method=method, **params)
+    logger.info('Success ({:.1f}s) - Results are stored in: {}'.format(
+        time.time() - start_time, file_path))
 
 
 def main():
