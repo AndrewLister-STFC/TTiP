@@ -19,6 +19,8 @@ in the firedrake virtual environment.
    :titlesonly:
    :caption: Contents:
 
+      Installing <users/installing>
+      General Usage <users/usage>
       Config File <users/conf_file>
 
 
