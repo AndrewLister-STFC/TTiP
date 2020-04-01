@@ -1,4 +1,4 @@
-.. install:
+.. _file_install:
 
 ###############
 Installing TTiP

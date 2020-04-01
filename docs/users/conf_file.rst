@@ -1,4 +1,4 @@
-.. conf_file:
+.. _file_conf_file:
 
 ##################
 Configuration File
