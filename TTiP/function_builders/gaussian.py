@@ -1,6 +1,23 @@
-"""
-This file holds the GaussianBuilder class which is used to build fucntions
-with gaussian distributions.
+r"""
+The Gaussian function creates a symmetric function with a peak equal to the
+`scale` at the location defined by `mean`.
+As the distance from this peak increases, the function decays exponentially.
+This decay is controlled by `sd`.
+
+The exact formula is:
+
+.. math::
+
+    \text{gaussian}(x, \text{mean}, \text{sd}, \text{scale}) =
+        \text{scale}\times e^{-\left(\frac{x-\text{mean}}{sd}^2\right)}
+
+Where:
+
+- mean is a vector (comma seperated list) of length dim(x),
+  or a scalar value that will be broadcast to a vector.
+- sd is a vector (comma seperated list) of length dim(x),
+  or a scalar value that will be broadcast to a vector.
+- scale is a scalar value
 """
 from firedrake import Function, SpatialCoordinate, exp
 

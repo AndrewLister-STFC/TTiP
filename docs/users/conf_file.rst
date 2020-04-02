@@ -15,9 +15,23 @@ Each function must define the `type` property, along with the relevent
 properties for the selected type.
 
 Available function types are:
-- gausian
-- sin
-- value
+
+- :ref:`sub_sub_constant`
+- :ref:`sub_sub_gaussian`
+
+.. _sub_sub_constant:
+
+Constant
+^^^^^^^^
+
+.. automodule:: TTiP.function_builders.constant
+
+.. _sub_sub_gaussian:
+
+Gaussian
+^^^^^^^^
+
+.. automodule:: TTiP.function_builders.gaussian
 
 File Sections
 =============
@@ -25,3 +39,4 @@ Each section is defined properly in the example config:
 
 .. include:: ../../TTiP/resources/default_config.ini
    :literal:
+

@@ -1,6 +1,16 @@
-"""
-This file holds the ConstantBuilder class which is used to build constant
-valued functions.
+r"""
+The Constant function creates a uniform function of `value` across the whole
+domain.
+
+The exact formula is:
+
+.. math::
+
+    \text{constant}(x, \text{value}) = \text{value}
+
+Where:
+
+- value is a scalar
 """
 from firedrake import Constant
 
