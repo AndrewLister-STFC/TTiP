@@ -21,7 +21,7 @@ Where:
 """
 from firedrake import Function, SpatialCoordinate, exp
 
-from TTiP.function_builders.base import FunctionBuilder
+from TTiP.function_builders.function_builder import FunctionBuilder
 
 
 class GaussianBuilder(FunctionBuilder):

@@ -5,8 +5,8 @@ from firedrake import (H1, File, NonlinearVariationalProblem,
                        NonlinearVariationalSolver)
 
 from TTiP.core.iteration_method import IterationMethod
-from TTiP.problem_mixins.boundaries import BoundaryMixin
-from TTiP.problem_mixins.time import TimeMixin
+from TTiP.problem_mixins.boundaries_mixin import BoundaryMixin
+from TTiP.problem_mixins.time_mixin import TimeMixin
 
 
 class Solver:

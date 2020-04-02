@@ -7,13 +7,13 @@ from inspect import getfile
 
 from firedrake import FunctionSpace
 from TTiP import resources
-from TTiP.parsers.boundary_conds import BoundaryCondsParser
-from TTiP.parsers.initial_vals import InitialValParser
-from TTiP.parsers.mesh import MeshParser
-from TTiP.parsers.parameters import ParametersParser
-from TTiP.parsers.solver import SolverParser
-from TTiP.parsers.sources import SourcesParser
-from TTiP.parsers.time import TimeParser
+from TTiP.parsers.boundary_conds_parser import BoundaryCondsParser
+from TTiP.parsers.initial_vals_parser import InitialValParser
+from TTiP.parsers.mesh_parser import MeshParser
+from TTiP.parsers.parameters_parser import ParametersParser
+from TTiP.parsers.solver_parser import SolverParser
+from TTiP.parsers.sources_parser import SourcesParser
+from TTiP.parsers.time_parser import TimeParser
 
 
 class Config:

@@ -1,8 +1,8 @@
 """
 This contains the parser for parsing the BOUNDARIES section of the config.
 """
-from TTiP.parsers.base import FunctionSectionParser
 from TTiP.parsers.parse_args import process_arg
+from TTiP.parsers.parser import FunctionSectionParser
 
 
 class BoundaryCondsParser(FunctionSectionParser):

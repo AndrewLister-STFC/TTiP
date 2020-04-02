@@ -38,4 +38,4 @@ def process_arg(val):
     except ValueError:
         pass
 
-    return val
+    return val.strip('"').strip("'")

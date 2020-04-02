@@ -4,9 +4,9 @@ This file stores the base problem and any created by adding mixins.
 from firedrake import Function, TestFunction, dot, dx, grad, replace
 
 
-from TTiP.problem_mixins.boundaries import BoundaryMixin
-from TTiP.problem_mixins.conductivity import SpitzerHarmMixin
-from TTiP.problem_mixins.time import TimeMixin
+from TTiP.problem_mixins.boundaries_mixin import BoundaryMixin
+from TTiP.problem_mixins.conductivity_mixin import SpitzerHarmMixin
+from TTiP.problem_mixins.time_mixin import TimeMixin
 
 
 class Problem:

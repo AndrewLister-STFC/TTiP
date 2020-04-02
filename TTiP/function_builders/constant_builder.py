@@ -14,7 +14,7 @@ Where:
 """
 from firedrake import Constant
 
-from TTiP.function_builders.base import FunctionBuilder
+from TTiP.function_builders.function_builder import FunctionBuilder
 
 
 class ConstantBuilder(FunctionBuilder):

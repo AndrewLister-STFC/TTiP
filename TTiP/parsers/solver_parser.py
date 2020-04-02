@@ -2,7 +2,7 @@
 This contains the parser for parsing the SOLVER section of the config.
 """
 from TTiP.parsers.parse_args import process_arg
-from TTiP.parsers.base import SectionParser
+from TTiP.parsers.parser import SectionParser
 
 
 class SolverParser(SectionParser):

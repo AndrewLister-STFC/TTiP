@@ -1,7 +1,7 @@
 """
 This holds all functions related to parsing the TIME section of the config file
 """
-from TTiP.parsers.base import SectionParser
+from TTiP.parsers.parser import SectionParser
 
 
 class TimeParser(SectionParser):

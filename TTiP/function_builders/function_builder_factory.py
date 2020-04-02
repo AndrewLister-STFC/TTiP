@@ -6,7 +6,7 @@ filename.
 from importlib import import_module
 from inspect import getmembers, isabstract, isclass
 
-from TTiP.function_builders.base import FunctionBuilder
+from TTiP.function_builders.function_builder import FunctionBuilder
 from TTiP.parsers.parse_args import process_arg
 
 
@@ -48,7 +48,8 @@ class FunctionBuilderFactory:
         Returns:
             FunctionBuilder: Initialised FunctionBuilder subclass.
         """
-        module = import_module('.' + function_type.lower(), __package__)
+        name = function_type.lower() + '_builder'
+        module = import_module('.' + name, __package__)
 
         classes = getmembers(
             module, lambda m: isclass(m) and not isabstract(m)

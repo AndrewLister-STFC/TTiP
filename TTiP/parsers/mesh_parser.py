@@ -3,7 +3,7 @@ This holds all functions related to parsing the MESH section of the config file
 """
 import firedrake
 from TTiP.parsers.parse_args import process_arg
-from TTiP.parsers.base import SectionParser
+from TTiP.parsers.parser import SectionParser
 
 
 class MeshParser(SectionParser):

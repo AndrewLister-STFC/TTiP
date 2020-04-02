@@ -3,7 +3,8 @@ This file contains the abstract base classes for the parsers.
 """
 from abc import ABC, abstractmethod
 
-from TTiP.function_builders.factory import FunctionBuilderFactory
+from TTiP.function_builders.function_builder_factory import \
+    FunctionBuilderFactory
 
 
 class SectionParser(ABC):

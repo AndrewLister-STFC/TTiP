@@ -1,7 +1,7 @@
 """
 This contains the parser for parsing the SOURCES section of the config.
 """
-from TTiP.parsers.base import FunctionSectionParser
+from TTiP.parsers.parser import FunctionSectionParser
 
 
 class SourcesParser(FunctionSectionParser):
