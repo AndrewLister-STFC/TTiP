@@ -2,7 +2,7 @@
 
 [![Documentation Status](https://readthedocs.org/projects/ttip/badge/?version=latest)](https://ttip.readthedocs.io/en/latest/?badge=latest)
 
-This is a tool designed to solve thermal transfer problems in the field of plasma physics.
+This is a tool designed to solve thermal transport problems in the field of plasma physics.
 
 Full docs can be found at: https://ttip.readthedocs.io/en/latest/
 
