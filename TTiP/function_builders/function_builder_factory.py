@@ -82,8 +82,12 @@ class FunctionBuilderFactory:
         """
         func_builder = self.create_function_builder(function_type)
 
-        for k, v in properties.items():
-            func_builder.assign(k, v)
+        try:
+            for k, v in properties.items():
+                func_builder.assign(k, v)
+        except KeyError:
+            raise ValueError('Could not create {} function with properties: {}'
+                             ''.format(function_type, properties))
 
         return func_builder.build()
 

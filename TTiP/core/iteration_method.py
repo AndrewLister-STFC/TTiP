@@ -42,7 +42,7 @@ class IterationMethod:
             raise ValueError('Not a valid method.')
         try:
             return getattr(self, method)(F, **kwargs)
-        except KeyError:
+        except AttributeError:
             raise ValueError('Not a valid method.')
 
     def BackwardEuler(self, F):
@@ -68,7 +68,7 @@ class IterationMethod:
         Returns:
             Function: THe updated function
         """
-        return replace(F, {self.T, self.T_})
+        return replace(F, {self.T: self.T_})
 
     def CrankNicolson(self, F):
         """
@@ -81,7 +81,7 @@ class IterationMethod:
             Function: THe updated function
         """
         T = 0.5*(self.T + self.T_)
-        return replace(F, {self.T, T})
+        return replace(F, {self.T: T})
 
     def Theta(self, F, theta):
         """

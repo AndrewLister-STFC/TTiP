@@ -35,6 +35,9 @@ class Config:
             filename (string):
                 The path to the file that contains the problem information.
         """
+        if not os.path.exists(filename):
+            raise ValueError('Config file does not exist.')
+
         resources_dir = os.path.dirname(getfile(resources))
         self.conf_parser = configparser.ConfigParser()
 
@@ -114,7 +117,7 @@ class Config:
         parser.parse(self.conf_parser['PARAMETERS'])
         return parser.density
 
-    def get_inital_val(self):
+    def get_initial_val(self):
         """
         Get the initial value term.
 

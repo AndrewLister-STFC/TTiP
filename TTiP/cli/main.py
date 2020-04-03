@@ -88,7 +88,7 @@ def run(config_file, debug=False):
 
     logger.debug('Building initial value..')
     # Set up initial value
-    initial_val = config.get_inital_val()
+    initial_val = config.get_initial_val()
     problem.T.assign(initial_val)
 
     logger.info('Problem set up ({:.1f}s)'.format(time.time()-start_time))
