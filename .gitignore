@@ -133,3 +133,5 @@ dmypy.json
 
 # Outputs
 ttip_results
+*.vtu
+*.pvd
