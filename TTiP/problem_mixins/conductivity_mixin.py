@@ -2,6 +2,7 @@
 Contains the conductivity classes for extending problems.
 """
 from scipy.constants import e, epsilon_0, m_e, pi
+
 from firedrake import Constant, replace, sqrt
 
 
@@ -43,6 +44,15 @@ class SpitzerHarmMixin:
         self.coulomb_ln = self._coulomb_ln()
         self.Z = self._Z()
         K = self._K()
+        self.set_K(K)
+
+    def set_K(self, K):
+        """
+        Set the value for K in self.a and self.L.
+
+        Args:
+            K (Function): The function so replace K with.
+        """
         self.a = replace(self.a, {self.K: K})
         self.L = replace(self.L, {self.K: K})
         self.K = K
