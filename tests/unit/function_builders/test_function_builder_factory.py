@@ -5,7 +5,7 @@ import unittest
 
 import numpy as np
 
-from firedrake import Constant, Function, FunctionSpace, UnitCubeMesh
+from firedrake import Constant, Function, FunctionSpace, UnitCubeMesh, UnitSquareMesh
 from TTiP.function_builders.constant_builder import ConstantBuilder
 from TTiP.function_builders.function_builder_factory import \
     FunctionBuilderFactory
@@ -90,7 +90,7 @@ class TestCreateFunctionDict(unittest.TestCase):
     """
 
     def setUp(self):
-        mesh = UnitCubeMesh(10, 10, 10)
+        mesh = UnitSquareMesh(100, 100)
         V = FunctionSpace(mesh, 'CG', 1)
         self.factory = FunctionBuilderFactory(mesh=mesh, V=V)
 
@@ -102,7 +102,7 @@ class TestCreateFunctionDict(unittest.TestCase):
             'func1.type': 'constant',
             'func1.value': '1.9',
             'another_one.type': 'gaussian',
-            'another_one.mean': '0.1, 2.0, 8.0',
+            'another_one.mean': '0.1, 2.0',
             'another_one.sd': '0.1',
             'another_one.scale': '10'}
 
@@ -125,10 +125,9 @@ class TestCreateFunctionDict(unittest.TestCase):
             return gaus_scale*np.exp(-0.5*(np.dot((x-gaus_mean)/gaus_sd,
                                                   (x-gaus_mean)/gaus_sd)))
 
-        points = [np.array([i/11, j/11, k/11])
+        points = [np.array([i/11, j/11])
                   for i in range(11)
-                  for j in range(11)
-                  for k in range(11)]
+                  for j in range(11)]
 
         conf = {
             'func1.type': 'constant',
