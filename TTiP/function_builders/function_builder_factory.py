@@ -57,8 +57,6 @@ class FunctionBuilderFactory:
             )
 
         if len(classes) != 1:
-            for c in classes:
-                print(c)
             raise RuntimeError('Could not get unique function builder for {}.'
                                ''.format(function_type))
 
