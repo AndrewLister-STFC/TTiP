@@ -50,8 +50,7 @@ class MeshParser(SectionParser):
         mesh_cls = getattr(firedrake, mesh_type)
 
         processed_args = []
-        args = conf.get('params')
-        conf.pop('params')
+        args = conf.pop('params', None)
         if args is not None:
             args = args.split(',')
             for arg in args:
