@@ -53,6 +53,6 @@ class BoundaryCondsParser(FunctionSectionParser):
                 if isinstance(v, dict) and 'type' in v:
                     f_type = v.pop('type')
                     func = self.factory.create_function(f_type, **v)
-                    boundaries[k] = func
+                    b[k] = func
 
         self.bcs = list(boundaries.values())
