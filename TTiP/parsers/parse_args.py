@@ -5,7 +5,7 @@ Utility module for parsing args.
 import operator
 from abc import ABC, abstractmethod
 
-from firedrake import SpatialCoordinate, UnitCubeMesh
+from firedrake import SpatialCoordinate
 
 
 class Node(ABC):
@@ -29,6 +29,13 @@ class Node(ABC):
     _custom_terminals = {}
 
     def __new__(cls, *args, **kwargs):
+        """
+        Override new to ensure that the root node is returned from building the
+        tree.
+
+        Returns:
+            Node: The root node of the generated tree.
+        """
         instance = super().__new__(cls)
         instance._init(*args, *kwargs)
         return instance._root()
@@ -49,6 +56,16 @@ class Node(ABC):
         super().__init__()
         self._parent = None
         self._used_terminals = []
+
+    def ready(self):
+        """
+        Check that all used terminals have been defined.
+        """
+        for t in self._used_terminals:
+            if self._custom_terminals[t] is None:
+                return False
+
+        return True
 
     @abstractmethod
     def evaluate(self):
@@ -136,7 +153,7 @@ class Expression(Node):
                  '*': (1, operator.mul, '*'),
                  '^': (2, operator.pow, '^'),
                  'e': (3, lambda x, y: x*10**y, 'e'),
-                 '<terminal>': (4, lambda l, r: l, '')}
+                 '<left>': (4, lambda l, r: l, '')}
 
     def _init(self, s):
         """
@@ -150,6 +167,13 @@ class Expression(Node):
         self._left = None
         self._right = None
         self._op = None
+        s = s.strip()
+
+        # Check if list (comma seperated).
+        if ',' in s:
+            self._set_left(List(s))
+            self._op = self.operators['<left>']
+            return
 
         # If first char is an open bracket, eval everything up to the last
         # closing bracket as the left arg.
@@ -168,7 +192,7 @@ class Expression(Node):
                 self._op = self.operators[rem[0]]
                 self._set_right(Expression(rem[1:]))
             else:
-                self._op = self.operators['<terminal>']
+                self._op = self.operators['<left>']
                 self._right = None
             return
 
@@ -176,11 +200,11 @@ class Expression(Node):
         for t in self._custom_terminals:
             if s.startswith(t):
                 tmp_s = s.strip(t)
-                if tmp_s.startswith(tuple(self.operators.keys())):
+                if tmp_s.startswith(tuple(self.operators.keys())) or not tmp_s:
                     self._set_left(Terminal(t))
                     s = tmp_s
                     if not s:
-                        self._op = self.operators['<terminal>']
+                        self._op = self.operators['<left>']
                         self._right = None
                         return
                     break
@@ -198,7 +222,7 @@ class Expression(Node):
         # Check that an operator was found.
         if best_partition[0] == s:
             # No operator so set left to be a terminal with s.
-            self._op = self.operators['<terminal>']
+            self._op = self.operators['<left>']
             if self._left is None:
                 self._set_left(Terminal(s))
             else:
@@ -258,6 +282,9 @@ class Expression(Node):
                 # Set f._left to self
                 f._set_left(self._root())
                 if parent is not None:
+                    # At this point, parent can only be Expression so disable
+                    # pylint warning.
+                    # pylint: disable=no-member
                     parent._set_right(f)
 
     def evaluate(self, mesh):
@@ -276,7 +303,10 @@ class Expression(Node):
             self._left = self._left.evaluate(mesh)
         if isinstance(self._right, Node):
             self._right = self._right.evaluate(mesh)
-        return self._op[1](self._left, self._right)
+        try:
+            return self._op[1](self._left, self._right)
+        except TypeError:
+            raise RuntimeError('Failed to evaluate "{}".'.format(str(self)))
 
     @property
     def _used_terminals(self):
@@ -295,6 +325,16 @@ class Expression(Node):
             right = self._right._used_terminals
         return left + right
 
+    @_used_terminals.setter
+    def _used_terminals(self, v):
+        """
+        No need to set as it's generated dynamically.
+
+        Args:
+            v (list<str>): Dummy var.
+        """
+        pass
+
     def __str__(self):
         """
         Return an neat string representation.
@@ -307,6 +347,50 @@ class Expression(Node):
                                      str(self._op[2]),
                                      str(self._right))
         return str(self._left)
+
+
+class List(Node):
+    """
+    A node for evaluating a list of comma seperated expressions.
+    """
+
+    def _init(self, s):
+        """
+        Initialiser for the List class.
+
+        Args:
+            s (str): The string to parse.
+        """
+        super()._init()
+        self._children = []
+        for s_i in s.split(','):
+            child = Expression(s_i)
+            child._parent = self
+            self._children.append(child)
+            self._used_terminals.extend(child._used_terminals)
+
+    def evaluate(self, mesh):
+        """
+        Evaluate the tree and return the correctly parsed equation.
+
+        Args:
+            mesh (Mesh):
+                The firedrake mesh to evaluate the value for.
+
+        Returns:
+            list<float, int, firedrake equation>:
+                The parsed function for use with firedrake.
+        """
+        return [child.evaluate(mesh) for child in self._children]
+
+    def __str__(self):
+        """
+        Return an neat string representation.
+
+        Returns:
+            str: The list as a string.
+        """
+        return '[' + ', '.join(str(c) for c in self._children) + ']'
 
 
 class Terminal(Node):
@@ -329,7 +413,7 @@ class Terminal(Node):
             s (str): The string to parse as a terminal.
         """
         super()._init()
-        self._string = s
+        self._string = s.strip()
         if s in self._custom_terminals:
             self._used_terminals = [s]
 
@@ -387,31 +471,75 @@ class Terminal(Node):
         return self._string
 
 
-def process_arg(val, mesh=None):
-    """
-    Convert a string into the correct value.
-    e.g. "2" -> 2 (int)
-         "false" -> False (bool)
-         "1.8" -> 1.8 (float)
-         "1.2, false" -> [1.2, False] (list)
+def process_args(conf, factory, str_keys=['type']):
+    outputs = {}
+    util_functions = {}
 
-    Args:
-        val (string): The value to convert.
-        mesh (Mesh, optional):
-            The firedrake mesh to evaluate the value for.
-            Defaults to None.
+    mesh = factory.mesh if factory is not None else None
 
-    Returns:
-        (Various): The converted value.
-    """
-    val = val.replace(' ', '')
-    if ',' in val:
-        return [process_arg(v, mesh) for v in val.split(',')]
+    tmp_functions = set([k[1:].split('.')[0]
+                         for k in conf
+                         if k.startswith('_')])
 
-    expression = Expression(val)
-    print(expression)
-    return expression.evaluate(mesh)
+    for f in tmp_functions:
+        Node.subscribe_terminal(f)
 
+    to_evaluate = []
 
-mesh = UnitCubeMesh(10, 10, 10)
-process_arg('1/2/3/4 + 1e-6^2', mesh)
+    for k, v in conf.items():
+        if k.startswith('_'):
+            tmp_dict = util_functions
+            k = k[1:]
+        else:
+            tmp_dict = outputs
+
+        keys = k.lower().split('.')
+
+        for key in keys[:-1]:
+            if key not in tmp_dict:
+                tmp_dict[key] = {}
+            tmp_dict = tmp_dict[key]
+
+        if keys[-1] not in str_keys:
+            v = Expression(v)
+            if v.ready():
+                v = v.evaluate(mesh)
+            else:
+                to_evaluate.append((keys, v))
+
+        tmp_dict[keys[-1]] = v
+
+    # Worst case, need to do len(to_evaluate) attempts.
+    for _ in range(len(to_evaluate)):
+        subscribed = []
+        for k, v in util_functions.items():
+            evaluated = []
+            for i, (keys, expr) in enumerate(to_evaluate):
+                if k == keys[0]:
+                    if expr.ready():
+                        tmp = v
+                        for n in keys[1:-1]:
+                            tmp = v[n]
+                        tmp[keys[-1]] = expr.evaluate(mesh)
+                        evaluated.append(i)
+                    else:
+                        break
+            else:
+                f_type = v.pop('type')
+                func = factory.create_function(f_type, **v)
+                Expression.update_terminal(k, func)
+                subscribed.append(k)
+
+            to_evaluate = [v for i, v in enumerate(to_evaluate)
+                           if i not in evaluated]
+
+        util_functions = {k: v for k, v in util_functions.items()
+                          if k not in subscribed}
+
+    for keys, val in to_evaluate:
+        tmp_dict = outputs
+        for n in keys[:-1]:
+            tmp_dict = tmp_dict[n]
+        tmp_dict[keys[-1]] = val.evaluate(mesh)
+
+    return outputs

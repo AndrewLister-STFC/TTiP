@@ -7,7 +7,7 @@ from importlib import import_module
 from inspect import getmembers, isabstract, isclass
 
 from TTiP.function_builders.function_builder import FunctionBuilder
-from TTiP.parsers.parse_args import process_arg
+from TTiP.parsers.parse_args import process_args
 
 
 class FunctionBuilderFactory:
@@ -104,17 +104,16 @@ class FunctionBuilderFactory:
             dict: A dictionary with key as the names from files and val as a
                 complete function.
         """
-        all_funcs = {}
-        for k, v in conf.items():
-            name, prop = k.lower().split('.')
-            if name not in all_funcs:
-                all_funcs[name] = {}
-
-            all_funcs[name][prop] = process_arg(v, self.mesh)
+        all_funcs = process_args(conf,
+                                 factory=self,
+                                 str_keys=['type'])
 
         funcs_dict = {}
-        for name, f_dict in all_funcs.items():
-            f_type = f_dict.pop('type')
-            funcs_dict[name.lower()] = self.create_function(f_type, **f_dict)
+        for k, v in all_funcs.items():
+            if isinstance(v, dict):
+                f_type = v.pop('type')
+                funcs_dict[k.lower()] = self.create_function(f_type, **v)
+            else:
+                funcs_dict[k.lower()] = v
 
         return funcs_dict

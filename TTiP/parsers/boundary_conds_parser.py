@@ -1,7 +1,7 @@
 """
 This contains the parser for parsing the BOUNDARIES section of the config.
 """
-from TTiP.parsers.parse_args import process_arg
+from TTiP.parsers.parse_args import process_args
 from TTiP.parsers.parser import FunctionSectionParser
 
 
@@ -36,17 +36,9 @@ class BoundaryCondsParser(FunctionSectionParser):
             conf (configparser section or dict):
                 The full BOUNDARIES section from the config.
         """
-        boundaries = {}
-        for k, v in conf.items():
-            names = k.lower().split('.')
-
-            tmp_dict = boundaries
-            for name in names[:-1]:
-                if name not in tmp_dict:
-                    tmp_dict[name] = {}
-                tmp_dict = tmp_dict[name]
-
-            tmp_dict[names[-1]] = process_arg(v, self._mesh)
+        boundaries = process_args(conf,
+                                  factory=self.factory,
+                                  str_keys=['type', 'boundary_type'])
 
         for b in boundaries.values():
             for k, v in b.items():

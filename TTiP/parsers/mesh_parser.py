@@ -2,7 +2,7 @@
 This holds all functions related to parsing the MESH section of the config file
 """
 import firedrake
-from TTiP.parsers.parse_args import process_arg
+from TTiP.parsers.parse_args import Expression
 from TTiP.parsers.parser import SectionParser
 
 
@@ -52,13 +52,12 @@ class MeshParser(SectionParser):
         processed_args = []
         args = conf.pop('params', None)
         if args is not None:
-            args = args.split(',')
-            for arg in args:
-                arg = process_arg(arg)
-                processed_args.append(arg)
+            args = Expression(args)
+            processed_args = args.evaluate(None)
 
         kwargs = {}
         for k, v in conf.items():
-            kwargs[k] = process_arg(v)
+            expr = Expression(v)
+            kwargs[k] = expr.evaluate(None)
 
         self.mesh = mesh_cls(*processed_args, **kwargs)

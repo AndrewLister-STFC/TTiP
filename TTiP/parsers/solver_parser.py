@@ -1,7 +1,7 @@
 """
 This contains the parser for parsing the SOLVER section of the config.
 """
-from TTiP.parsers.parse_args import process_arg
+from TTiP.parsers.parse_args import process_args
 from TTiP.parsers.parser import SectionParser
 
 
@@ -36,7 +36,10 @@ class SolverParser(SectionParser):
             conf (configparser section or dict):
                 The full SOLVER section from the config.
         """
-        self.file_path = conf['file_path']
-        self.method = conf['method']
-        self.params = {k: process_arg(v) for k, v in conf.items()
+        all_inps = process_args(conf,
+                                factory=None,
+                                str_keys=['file_path', 'method'])
+        self.file_path = all_inps['file_path']
+        self.method = all_inps['method']
+        self.params = {k: v for k, v in all_inps.items()
                        if k not in ['file_path', 'method']}
