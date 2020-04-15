@@ -5,6 +5,8 @@ Utility module for parsing args.
 import operator
 from abc import ABC, abstractmethod
 
+from firedrake import SpatialCoordinate, UnitCubeMesh
+
 
 class Node(ABC):
     """
@@ -12,15 +14,41 @@ class Node(ABC):
 
     For any node, call evaluate to get the parsed value including all children.
 
+    Class Attributes:
+        _custom_terminals (dict):
+            A dictionary holding a global (across all nodes) list of custom
+            terminals. Custom terminals will be a name and corresponding result
+            for the evaluation.
+
     Attributes:
         _parent (Node): The node that this one branches from.
+        _used_terminals (list<str>):
+            Which terminals have been used in the node and children.
     """
 
-    def __init__(self):
+    _custom_terminals = {}
+
+    def __new__(cls, *args, **kwargs):
+        instance = super().__new__(cls)
+        instance._init(*args, *kwargs)
+        return instance._root()
+
+    def __init__(self, *args, **kwargs):
         """
-        Initialise the parent ot None.
+        Initialiser for Node.
+        Note: This is not used.
+              Initialising is performed by _init below to prevent __new__ from
+              reinitialising objects.
         """
+        return
+
+    def _init(self, *args, **kwargs):
+        """
+        Initialise the parent to None.
+        """
+        super().__init__()
         self._parent = None
+        self._used_terminals = []
 
     @abstractmethod
     def evaluate(self):
@@ -28,6 +56,55 @@ class Node(ABC):
         This should return a value for the node.
         """
         raise NotImplementedError
+
+    def _root(self):
+        """
+        Return the top level of the expression tree.
+
+        Returns:
+            None: The top level node (root of the tree).
+        """
+        if self._parent is None:
+            return self
+        return self._parent._root()
+
+    @classmethod
+    def clear_terminals(cls):
+        """
+        Clear the custom terminals. It is advised that this is done before
+        parsing any new sections.
+        """
+        cls._custom_terminals = {}
+
+    @classmethod
+    def subscribe_terminal(cls, name, value=None):
+        """
+        Add a terminal to the list of custom terminals.
+
+        Args:
+            name (str): The name to subscibe
+            value (Any, optional):
+                The value of the terminal if available. Defaults to None.
+        """
+        if name in cls._custom_terminals:
+            raise AttributeError('{} already subscribed. To update use '
+                                 '"update_terminal"'.format(name))
+        cls._custom_terminals[name] = value
+
+    @classmethod
+    def update_terminal(cls, name, value):
+        """
+        Add a terminal to the list of custom terminals.
+
+        Args:
+            name (str): The name to subscibe
+            value (Any, optional):
+                The value of the terminal if available. Defaults to None.
+        """
+        if name not in cls._custom_terminals:
+            raise AttributeError('{} not subscribed. To subscribe use '
+                                 '"subscribe_terminal"'.format(name))
+        cls._custom_terminals[name] = value
 
 
 class Expression(Node):
@@ -53,20 +130,22 @@ class Expression(Node):
             A pair of priority and operator callable for the Expression.
             If priority is higher it will be evaluated before other operators.
     """
-    operators = {'+': (0, operator.add),
-                 '-': (0, operator.sub),
-                 '/': (1, operator.truediv),
-                 '*': (1, operator.mul),
-                 '^': (2, operator.pow),
-                 '<terminal>': (3, lambda l, r: l)}
+    operators = {'+': (0, operator.add, '+'),
+                 '-': (0, operator.sub, '-'),
+                 '/': (1, operator.truediv, '/'),
+                 '*': (1, operator.mul, '*'),
+                 '^': (2, operator.pow, '^'),
+                 'e': (3, lambda x, y: x*10**y, 'e'),
+                 '<terminal>': (4, lambda l, r: l, '')}
 
-    def __init__(self, s):
+    def _init(self, s):
         """
         Initialiser for the Expression class.
 
         Args:
             s (str): The string to parsse into an equation.
         """
+        super()._init()
         self._parent = None
         self._left = None
         self._right = None
@@ -76,7 +155,7 @@ class Expression(Node):
         # closing bracket as the left arg.
         if s[0] == '(':
             left, rem = s[1:].split(')', 1)
-            while left.count('(') != left.count(')') - 1:
+            while left.count('(') != left.count(')'):
                 if not rem:
                     raise ValueError('Unclosed brackets detected in: {}'
                                      ''.format(s))
@@ -91,26 +170,44 @@ class Expression(Node):
             else:
                 self._op = self.operators['<terminal>']
                 self._right = None
-
             return
+
+        # Check if s starts with a custom terminal.
+        for t in self._custom_terminals:
+            if s.startswith(t):
+                tmp_s = s.strip(t)
+                if tmp_s.startswith(tuple(self.operators.keys())):
+                    self._set_left(Terminal(t))
+                    s = tmp_s
+                    if not s:
+                        self._op = self.operators['<terminal>']
+                        self._right = None
+                        return
+                    break
 
         # For each operator split the string and take the split that minimises
         # the left argument as this will be first.
         best_partition = [s, '', '']
         for o in self.operators:
             part = s.partition(o)
-            if len(part[0]) < len(best_partition[0]):
+            # Ignore leading operator (error or negative)
+            is_left = self._left is not None or part[0]
+            if is_left and len(part[0]) < len(best_partition[0]):
                 best_partition = part
 
         # Check that an operator was found.
         if best_partition[0] == s:
-            # No operator so set left to be a terminal
-            self.op = self.operators['<terminal>']
-            self._set_left(Terminal(s))
+            # No operator so set left to be a terminal with s.
+            self._op = self.operators['<terminal>']
+            if self._left is None:
+                self._set_left(Terminal(s))
+            else:
+                raise RuntimeError('Failed to parse input: {}'.format(s))
             self._right = None
         else:
             self._op = self.operators[best_partition[1]]
-            self._set_left(Expression(best_partition[0]))
+            if self._left is None:
+                self._set_left(Terminal(best_partition[0]))
             self._set_right(Expression(best_partition[2]))
 
     def _set_left(self, f):
@@ -121,6 +218,7 @@ class Expression(Node):
             f (func or terminal): The fucntion that will be the left arg.
         """
         self._left = f
+        f._parent = self
 
     def _set_right(self, f):
         r"""
@@ -140,29 +238,75 @@ class Expression(Node):
         Args:
             f (func or terminal): The function to set as the right arg.
         """
-        if self._op[0] > f._op[0]:
+        if isinstance(f, Terminal):
             self._right = f
             f._parent = self
         else:
-            self._set_right(f._left)
-            f._set_left(self)
-            if self._parent is not None:
-                self._parent._set_right(f)
-            self._parent = f
+            if self._op[0] < f._op[0]:
+                self._right = f
+                f._parent = self
+            else:
+                # Cut left arg off f.
+                left = f._left
+                f._left = None
+                left._parent = None
+                # Cut self off parent
+                parent = self._parent
+                self._parent = None
+                # Set right arg to what was f._left
+                self._set_right(left)
+                # Set f._left to self
+                f._set_left(self._root())
+                if parent is not None:
+                    parent._set_right(f)
 
-    def evaluate(self):
+    def evaluate(self, mesh):
         """
         Evaluate the tree and return the correctly parsed equation.
+
+        Args:
+            mesh (Mesh):
+                The firedrake mesh to evaluate the value for.
 
         Returns:
             float, int, firedrake equation:
                 The parsed function for use with firedrake.
         """
         if isinstance(self._left, Node):
-            self._left = self._left.evaluate()
+            self._left = self._left.evaluate(mesh)
         if isinstance(self._right, Node):
-            self._right = self._right.evaluate()
-        return self.operators[self._op](self._left, self._right)
+            self._right = self._right.evaluate(mesh)
+        return self._op[1](self._left, self._right)
+
+    @property
+    def _used_terminals(self):
+        """
+        Property to dynamically return used terminals.
+        Used terminals are a sum of the used terminals of it's children.
+
+        Returns:
+            list<str>: The names of the used terminals.
+        """
+        left = []
+        right = []
+        if self._left is not None:
+            left = self._left._used_terminals
+        if self._right is not None:
+            right = self._right._used_terminals
+        return left + right
+
+    def __str__(self):
+        """
+        Return an neat string representation.
+
+        Returns:
+            str: The expression as a string.
+        """
+        if self._op[2]:
+            return '({}{}{})'.format(str(self._left),
+                                     str(self._op[2]),
+                                     str(self._right))
+        return str(self._left)
 
 
 class Terminal(Node):
@@ -177,22 +321,32 @@ class Terminal(Node):
         "1.2, false" -> [1.2, False] (list)
     """
 
-    def __init__(self, s):
+    def _init(self, s):
         """
         Initialiser for the Terminal class.
 
         Args:
             s (str): The string to parse as a terminal.
         """
+        super()._init()
         self._string = s
+        if s in self._custom_terminals:
+            self._used_terminals = [s]
 
-    def evaluate(self):
+    def evaluate(self, mesh):
         """
         Evaluate the terminal and return the parsed value
+
+        Args:
+            mesh (Mesh):
+                The firedrake mesh to evaluate the value for.
 
         Returns:
             (varies): The parsed terminal.
         """
+        if self._string in self._custom_terminals:
+            return self._custom_terminals[self._string]
+
         if self._string.lower() == 'true':
             return True
         if self._string.lower() == 'false':
@@ -210,10 +364,30 @@ class Terminal(Node):
         except ValueError:
             pass
 
+        if mesh is not None:
+            x = SpatialCoordinate(mesh)
+            str_to_spatial_coords_lookup = {
+                'x': x[0],
+                'x[0]': x[0]}
+            if len(x) > 1:
+                str_to_spatial_coords_lookup.update({
+                    'y': x[1],
+                    'x[1]': x[1]})
+            if len(x) > 2:
+                str_to_spatial_coords_lookup.update({
+                    'z': x[2],
+                    'x[2]': x[2]})
+
+            if self._string in str_to_spatial_coords_lookup:
+                return str_to_spatial_coords_lookup[self._string]
+
         return self._string.strip('"').strip("'")
 
+    def __str__(self):
+        return self._string
 
-def process_arg(val):
+
+def process_arg(val, mesh=None):
     """
     Convert a string into the correct value.
     e.g. "2" -> 2 (int)
@@ -223,13 +397,21 @@ def process_arg(val):
 
     Args:
         val (string): The value to convert.
+        mesh (Mesh, optional):
+            The firedrake mesh to evaluate the value for.
+            Defaults to None.
 
     Returns:
         (Various): The converted value.
     """
     val = val.replace(' ', '')
     if ',' in val:
-        return [process_arg(v) for v in val.split(',')]
+        return [process_arg(v, mesh) for v in val.split(',')]
 
     expression = Expression(val)
-    return expression.evaluate()
+    print(expression)
+    return expression.evaluate(mesh)
+
+
+mesh = UnitCubeMesh(10, 10, 10)
+process_arg('1/2/3/4 + 1e-6^2', mesh)

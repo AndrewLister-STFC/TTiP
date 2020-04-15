@@ -43,4 +43,5 @@ class FunctionSectionParser(SectionParser):
                 The function space that the functions should belong to.
         """
         super().__init__()
+        self._mesh = mesh
         self.factory = FunctionBuilderFactory(mesh, V)

@@ -110,7 +110,7 @@ class FunctionBuilderFactory:
             if name not in all_funcs:
                 all_funcs[name] = {}
 
-            all_funcs[name][prop] = process_arg(v)
+            all_funcs[name][prop] = process_arg(v, self.mesh)
 
         funcs_dict = {}
         for name, f_dict in all_funcs.items():

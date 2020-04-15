@@ -46,7 +46,7 @@ class BoundaryCondsParser(FunctionSectionParser):
                     tmp_dict[name] = {}
                 tmp_dict = tmp_dict[name]
 
-            tmp_dict[names[-1]] = process_arg(v)
+            tmp_dict[names[-1]] = process_arg(v, self._mesh)
 
         for b in boundaries.values():
             for k, v in b.items():
