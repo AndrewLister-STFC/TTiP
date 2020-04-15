@@ -32,6 +32,8 @@ class FunctionSectionParser(SectionParser):
         factory (FunctionBuilderFactory):
             A factory for generating functions from the config values.
     """
+    # pylint: disable=abstract-method
+
     def __init__(self, mesh, V):
         """
         Initialiser for the FunctionSectionParser.

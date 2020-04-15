@@ -50,7 +50,7 @@ def run(config_file, debug=False):
     # pylint: disable=too-many-locals
     logger = setup_logger(debug=debug)
 
-    logger.info('Running TTiP on {}'.format(config_file))
+    logger.info('Running TTiP on %s', config_file)
     config = Config(config_file)
 
     logger.info('Setting up the problem.')
@@ -91,15 +91,15 @@ def run(config_file, debug=False):
     initial_val = config.get_initial_val()
     problem.T.assign(initial_val)
 
-    logger.info('Problem set up ({:.1f}s)'.format(time.time()-start_time))
+    logger.info('Problem set up (%.1fs)', time.time()-start_time)
     logger.info('Running the solve.')
     start_time = time.time()
     # Solve
     file_path, method, params = config.get_solver_params()
     solver = Solver(problem)
     solver.solve(file_path=file_path, method=method, **params)
-    logger.info('Success ({:.1f}s) - Results are stored in: {}'.format(
-        time.time() - start_time, file_path))
+    logger.info('Success (%.1fs) - Results are stored in: %s',
+                time.time() - start_time, file_path)
 
 
 def main():

@@ -57,7 +57,7 @@ class GaussianBuilder(FunctionBuilder):
         Returns:
             Function: firedrake Constant set to the given value.
         """
-        for k in self.properties.keys():
+        for k in self.properties:
             if self._props[k] is None:
                 raise AttributeError('"{}" has not been defined.'.format(k))
 

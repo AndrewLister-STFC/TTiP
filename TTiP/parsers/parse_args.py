@@ -7,6 +7,8 @@ from abc import ABC, abstractmethod
 
 from firedrake import SpatialCoordinate
 
+# pylint: disable=attribute-defined-outside-init, arguments-differ, protected-access
+
 
 class Node(ABC):
     """
@@ -22,7 +24,7 @@ class Node(ABC):
 
     Attributes:
         _parent (Node): The node that this one branches from.
-        _used_terminals (list<str>):
+        used_terminals (list<str>):
             Which terminals have been used in the node and children.
     """
 
@@ -38,9 +40,9 @@ class Node(ABC):
         """
         instance = super().__new__(cls)
         instance._init(*args, *kwargs)
-        return instance._root()
+        return instance.root()
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self):
         """
         Initialiser for Node.
         Note: This is not used.
@@ -49,32 +51,52 @@ class Node(ABC):
         """
         return
 
-    def _init(self, *args, **kwargs):
+    def _init(self):
         """
         Initialise the parent to None.
+
+        Args:
+            s (str): The string to parsse into an equation.
         """
         super().__init__()
         self._parent = None
         self._used_terminals = []
 
+    @property
+    def used_terminals(self):
+        """
+        Getter for _used_terminals
+
+        Returns:
+            list<str>:
+                The names of terminals that have been used in this node or it's
+                children.
+        """
+        return self._used_terminals
+
     def ready(self):
         """
         Check that all used terminals have been defined.
         """
-        for t in self._used_terminals:
+        for t in self.used_terminals:
             if self._custom_terminals[t] is None:
                 return False
 
         return True
 
     @abstractmethod
-    def evaluate(self):
+    def evaluate(self, mesh=None):
         """
         This should return a value for the node.
+
+        Args:
+            mesh (Mesh, optional):
+                The firedrake mesh to evaluate the value for.
+                Defaults to None.
         """
         raise NotImplementedError
 
-    def _root(self):
+    def root(self):
         """
         Return the top level of the expression tree.
 
@@ -83,7 +105,7 @@ class Node(ABC):
         """
         if self._parent is None:
             return self
-        return self._parent._root()
+        return self._parent.root()
 
     @classmethod
     def clear_terminals(cls):
@@ -171,7 +193,7 @@ class Expression(Node):
 
         # Check if list (comma seperated).
         if ',' in s:
-            self._set_left(List(s))
+            self.set_left(List(s))
             self._op = self.operators['<left>']
             return
 
@@ -186,11 +208,11 @@ class Expression(Node):
                 tmp, rem = rem.split(')', 1)
                 left = left + ')' + tmp
 
-            self._set_left(Expression(left))
+            self.set_left(Expression(left))
 
             if rem:
                 self._op = self.operators[rem[0]]
-                self._set_right(Expression(rem[1:]))
+                self.set_right(Expression(rem[1:]))
             else:
                 self._op = self.operators['<left>']
                 self._right = None
@@ -201,7 +223,7 @@ class Expression(Node):
             if s.startswith(t):
                 tmp_s = s.strip(t)
                 if tmp_s.startswith(tuple(self.operators.keys())) or not tmp_s:
-                    self._set_left(Terminal(t))
+                    self.set_left(Terminal(t))
                     s = tmp_s
                     if not s:
                         self._op = self.operators['<left>']
@@ -224,27 +246,27 @@ class Expression(Node):
             # No operator so set left to be a terminal with s.
             self._op = self.operators['<left>']
             if self._left is None:
-                self._set_left(Terminal(s))
+                self.set_left(Terminal(s))
             else:
                 raise RuntimeError('Failed to parse input: {}'.format(s))
             self._right = None
         else:
             self._op = self.operators[best_partition[1]]
             if self._left is None:
-                self._set_left(Terminal(best_partition[0]))
-            self._set_right(Expression(best_partition[2]))
+                self.set_left(Terminal(best_partition[0]))
+            self.set_right(Expression(best_partition[2]))
 
-    def _set_left(self, f):
+    def set_left(self, f):
         """
         Update the left argument for the function.
 
         Args:
-            f (func or terminal): The fucntion that will be the left arg.
+            f (Node): The node that will be the left arg.
         """
         self._left = f
         f._parent = self
 
-    def _set_right(self, f):
+    def set_right(self, f):
         r"""
         Update the right argument of the function.
         If the operator of the function has a lower or equal priority propagate
@@ -260,7 +282,7 @@ class Expression(Node):
                                l    x
 
         Args:
-            f (func or terminal): The function to set as the right arg.
+            f (Node): The function to set as the right arg.
         """
         if isinstance(f, Terminal):
             self._right = f
@@ -278,22 +300,23 @@ class Expression(Node):
                 parent = self._parent
                 self._parent = None
                 # Set right arg to what was f._left
-                self._set_right(left)
+                self.set_right(left)
                 # Set f._left to self
-                f._set_left(self._root())
+                f.set_left(self.root())
                 if parent is not None:
                     # At this point, parent can only be Expression so disable
                     # pylint warning.
                     # pylint: disable=no-member
-                    parent._set_right(f)
+                    parent.set_right(f)
 
-    def evaluate(self, mesh):
+    def evaluate(self, mesh=None):
         """
         Evaluate the tree and return the correctly parsed equation.
 
         Args:
-            mesh (Mesh):
+            mesh (Mesh, optional):
                 The firedrake mesh to evaluate the value for.
+                Defaults to None.
 
         Returns:
             float, int, firedrake equation:
@@ -309,7 +332,7 @@ class Expression(Node):
             raise RuntimeError('Failed to evaluate "{}".'.format(str(self)))
 
     @property
-    def _used_terminals(self):
+    def used_terminals(self):
         """
         Property to dynamically return used terminals.
         Used terminals are a sum of the used terminals of it's children.
@@ -320,20 +343,10 @@ class Expression(Node):
         left = []
         right = []
         if self._left is not None:
-            left = self._left._used_terminals
+            left = self._left.used_terminals
         if self._right is not None:
-            right = self._right._used_terminals
+            right = self._right.used_terminals
         return left + right
-
-    @_used_terminals.setter
-    def _used_terminals(self, v):
-        """
-        No need to set as it's generated dynamically.
-
-        Args:
-            v (list<str>): Dummy var.
-        """
-        pass
 
     def __str__(self):
         """
@@ -367,9 +380,9 @@ class List(Node):
             child = Expression(s_i)
             child._parent = self
             self._children.append(child)
-            self._used_terminals.extend(child._used_terminals)
+            self.used_terminals.extend(child.used_terminals)
 
-    def evaluate(self, mesh):
+    def evaluate(self, mesh=None):
         """
         Evaluate the tree and return the correctly parsed equation.
 
@@ -417,13 +430,14 @@ class Terminal(Node):
         if s in self._custom_terminals:
             self._used_terminals = [s]
 
-    def evaluate(self, mesh):
+    def evaluate(self, mesh=None):
         """
         Evaluate the terminal and return the parsed value
 
         Args:
-            mesh (Mesh):
+            mesh (Mesh, optional):
                 The firedrake mesh to evaluate the value for.
+                Defaults to None.
 
         Returns:
             (varies): The parsed terminal.
@@ -471,15 +485,37 @@ class Terminal(Node):
         return self._string
 
 
-def process_args(conf, factory, str_keys=['type']):
+# pylint: disable=dangerous-default-value
+def process_args(conf, factory=None, str_keys=['type']):
+    """
+    Process the input config into a nested dictionary with evaluated values.
+    Entries starting with an '_' are classed as interim functions and will not
+    be returned, but will be used in returned values.
+    
+    Args:
+        conf (dict):
+            The dictionary to parse. Keys are expected to be strings with any
+            nesting indicated by '.'s. Values should also be strings.
+            e.g. {'arg_1.param': '2.0'}
+        factory (FunctionBuilderFactory, optional):
+            The factory that should be used to create any interim functions.
+            Setting this to None indicates that no functions are expected.
+            Defaults to None.
+        str_keys (list, optional):
+            The keys that are known to be strings and do not need parsing.
+            Defaults to ['type'].
+
+    Returns:
+        dict: A nested dictionary of all non-interim entries with parsed values
+    """
     outputs = {}
     util_functions = {}
 
     mesh = factory.mesh if factory is not None else None
 
-    tmp_functions = set([k[1:].split('.')[0]
-                         for k in conf
-                         if k.startswith('_')])
+    tmp_functions = {k[1:].split('.')[0]
+                     for k in conf
+                     if k.startswith('_')}
 
     for f in tmp_functions:
         Node.subscribe_terminal(f)
