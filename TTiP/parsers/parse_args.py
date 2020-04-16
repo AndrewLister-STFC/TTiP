@@ -42,7 +42,7 @@ class Node(ABC):
         instance._init(*args, *kwargs)
         return instance.root()
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         """
         Initialiser for Node.
         Note: This is not used.

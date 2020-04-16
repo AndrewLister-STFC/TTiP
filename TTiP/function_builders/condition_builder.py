@@ -6,7 +6,7 @@ The exact formula is:
 
 .. math::
 
-    \text{Condition}(\text{operator}, \text{lhs}, \text{rhs}) =
+    \text{Condition}(x, \text{operator}, \text{lhs}, \text{rhs}) =
     \begin{cases}
     1, &\text{lhs} \text{ operator } \text{rhs}\\
     0, &\text{otherwise}
@@ -22,9 +22,9 @@ e.g.
 
 .. math::
 
-    \text{Condition}(<, x^2 + y^2, 10) =
+    \text{Condition}(\vec{x}, <, x^2 + y^2, 10) =
     \begin{cases}
-    1, & x^2 + y^2 < 10\\
+    1, & x_1^2 + x_2^2 < 10\\
     0, &\text{otherwise}
     \end{cases}
 

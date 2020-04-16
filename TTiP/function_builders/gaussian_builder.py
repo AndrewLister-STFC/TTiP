@@ -9,7 +9,9 @@ The exact formula is:
 .. math::
 
     \text{gaussian}(x, \text{mean}, \text{sd}, \text{scale}) =
-        \text{scale}\times e^{-\frac{1}{2}\left(\frac{x-\text{mean}}{sd}^2\right)}
+        \text{scale}\times
+        e^{-\frac{1}{2}\left(\frac{x-\text{mean}}{\text{sd}}\right)
+        \cdot\left(\frac{x-\text{mean}}{\text{sd}}\right)}
 
 Where:
 
