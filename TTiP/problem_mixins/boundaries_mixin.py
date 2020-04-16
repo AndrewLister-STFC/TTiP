@@ -148,7 +148,7 @@ class BoundaryMixin:
         if isinstance(g, (float, int)):
             g = Constant(g)
         if isinstance(alpha, (float, int)):
-            alpha = Constant(g)
+            alpha = Constant(alpha)
 
         a_integrand = alpha*self.v*self.T
         L_integrand = self.v*g

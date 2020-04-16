@@ -5,7 +5,7 @@ Utility module for parsing args.
 import operator
 from abc import ABC, abstractmethod
 
-from firedrake import SpatialCoordinate
+from firedrake import Function, SpatialCoordinate
 
 # pylint: disable=attribute-defined-outside-init, arguments-differ, protected-access
 
@@ -85,7 +85,7 @@ class Node(ABC):
         return True
 
     @abstractmethod
-    def evaluate(self, mesh=None):
+    def evaluate(self, mesh=None, V=None):
         """
         This should return a value for the node.
 
@@ -93,6 +93,9 @@ class Node(ABC):
             mesh (Mesh, optional):
                 The firedrake mesh to evaluate the value for.
                 Defaults to None.
+            V (FunctionSpace, optional):
+                The firedrake functionspace that spatial coords will be
+                evaluated over. Defaults to None.
         """
         raise NotImplementedError
 
@@ -309,7 +312,7 @@ class Expression(Node):
                     # pylint: disable=no-member
                     parent.set_right(f)
 
-    def evaluate(self, mesh=None):
+    def evaluate(self, mesh=None, V=None):
         """
         Evaluate the tree and return the correctly parsed equation.
 
@@ -317,17 +320,22 @@ class Expression(Node):
             mesh (Mesh, optional):
                 The firedrake mesh to evaluate the value for.
                 Defaults to None.
+            V (FunctionSpace, optional):
+                The firedrake functionspace that spatial coords will be
+                evaluated over. Defaults to None.
 
         Returns:
             float, int, firedrake equation:
                 The parsed function for use with firedrake.
         """
-        if isinstance(self._left, Node):
-            self._left = self._left.evaluate(mesh)
-        if isinstance(self._right, Node):
-            self._right = self._right.evaluate(mesh)
+        left = self._left
+        right = self._right
+        if isinstance(left, Node):
+            left = left.evaluate(mesh, V)
+        if isinstance(right, Node):
+            right = right.evaluate(mesh, V)
         try:
-            return self._op[1](self._left, self._right)
+            return self._op[1](left, right)
         except TypeError:
             raise RuntimeError('Failed to evaluate "{}".'.format(str(self)))
 
@@ -382,19 +390,22 @@ class List(Node):
             self._children.append(child)
             self.used_terminals.extend(child.used_terminals)
 
-    def evaluate(self, mesh=None):
+    def evaluate(self, mesh=None, V=None):
         """
         Evaluate the tree and return the correctly parsed equation.
 
         Args:
             mesh (Mesh):
                 The firedrake mesh to evaluate the value for.
+            V (FunctionSpace, optional):
+                The firedrake functionspace that spatial coords will be
+                evaluated over. Defaults to None.
 
         Returns:
             list<float, int, firedrake equation>:
                 The parsed function for use with firedrake.
         """
-        return [child.evaluate(mesh) for child in self._children]
+        return [child.evaluate(mesh, V) for child in self._children]
 
     def __str__(self):
         """
@@ -430,7 +441,7 @@ class Terminal(Node):
         if s in self._custom_terminals:
             self._used_terminals = [s]
 
-    def evaluate(self, mesh=None):
+    def evaluate(self, mesh=None, V=None):
         """
         Evaluate the terminal and return the parsed value
 
@@ -438,6 +449,9 @@ class Terminal(Node):
             mesh (Mesh, optional):
                 The firedrake mesh to evaluate the value for.
                 Defaults to None.
+            V (FunctionSpace, optional):
+                The firedrake functionspace that spatial coords will be
+                evaluated over. Defaults to None.
 
         Returns:
             (varies): The parsed terminal.
@@ -477,7 +491,8 @@ class Terminal(Node):
                     'x[2]': x[2]})
 
             if self._string in str_to_spatial_coords_lookup:
-                return str_to_spatial_coords_lookup[self._string]
+                sc = str_to_spatial_coords_lookup[self._string]
+                return Function(V).interpolate(sc)
 
         return self._string.strip('"').strip("'")
 
@@ -486,12 +501,12 @@ class Terminal(Node):
 
 
 # pylint: disable=dangerous-default-value
-def process_args(conf, factory=None, str_keys=['type']):
+def process_args(conf, factory=None, str_keys=['type'], clean=True):
     """
     Process the input config into a nested dictionary with evaluated values.
     Entries starting with an '_' are classed as interim functions and will not
     be returned, but will be used in returned values.
-    
+
     Args:
         conf (dict):
             The dictionary to parse. Keys are expected to be strings with any
@@ -504,14 +519,20 @@ def process_args(conf, factory=None, str_keys=['type']):
         str_keys (list, optional):
             The keys that are known to be strings and do not need parsing.
             Defaults to ['type'].
+        clean (bool, optional):
+            If True, clear all custom terminals before processing.
+            Defaults to True.
 
     Returns:
         dict: A nested dictionary of all non-interim entries with parsed values
     """
     outputs = {}
     util_functions = {}
+    if clean:
+        Node.clear_terminals()
 
     mesh = factory.mesh if factory is not None else None
+    V = factory.V if factory is not None else None
 
     tmp_functions = {k[1:].split('.')[0]
                      for k in conf
@@ -539,7 +560,7 @@ def process_args(conf, factory=None, str_keys=['type']):
         if keys[-1] not in str_keys:
             v = Expression(v)
             if v.ready():
-                v = v.evaluate(mesh)
+                v = v.evaluate(mesh, V)
             else:
                 to_evaluate.append((keys, v))
 
@@ -556,14 +577,15 @@ def process_args(conf, factory=None, str_keys=['type']):
                         tmp = v
                         for n in keys[1:-1]:
                             tmp = v[n]
-                        tmp[keys[-1]] = expr.evaluate(mesh)
+                        tmp[keys[-1]] = expr.evaluate(mesh, V)
                         evaluated.append(i)
                     else:
                         break
             else:
-                f_type = v.pop('type')
-                func = factory.create_function(f_type, **v)
-                Expression.update_terminal(k, func)
+                if isinstance(v, dict) and 'type' in v:
+                    f_type = v.pop('type')
+                    v = factory.create_function(f_type, **v)
+                Expression.update_terminal(k, v)
                 subscribed.append(k)
 
             to_evaluate = [v for i, v in enumerate(to_evaluate)
@@ -576,6 +598,6 @@ def process_args(conf, factory=None, str_keys=['type']):
         tmp_dict = outputs
         for n in keys[:-1]:
             tmp_dict = tmp_dict[n]
-        tmp_dict[keys[-1]] = val.evaluate(mesh)
+        tmp_dict[keys[-1]] = val.evaluate(mesh, V)
 
     return outputs
