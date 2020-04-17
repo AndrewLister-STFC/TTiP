@@ -15,6 +15,10 @@ jobs:
     runs-on: ubuntu-latest
     container: firedrakeproject/firedrake
     steps:
+      - name: Change owner
+        run: |
+          sudo chown -R $USER /__w
+          sudo chmod -R 777 /__w
       - uses: actions/checkout@v2
       - name: Install dependencies
         run: |
