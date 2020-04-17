@@ -15,17 +15,13 @@ jobs:
     runs-on: ubuntu-latest
     container: firedrakeproject/firedrake
     steps:
-      - name: Change owner
-        run: |
-          #echo $USER
-          #ls -la /
-          # sudo chown -R $USER /__w
-          sudo chmod -R 777 /__w
+      - name: Change permissions for checkout
+        run: sudo chmod -R 777 /__w
       - uses: actions/checkout@v2
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install .
+          python -m pip install .
       - name: Lint with flake8
         run: |
           pip install flake8
