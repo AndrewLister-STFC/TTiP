@@ -17,7 +17,9 @@ jobs:
     steps:
       - name: Change owner
         run: |
-          sudo chown -R $USER /__w
+          #echo $USER
+          #ls -la /
+          # sudo chown -R $USER /__w
           sudo chmod -R 777 /__w
       - uses: actions/checkout@v2
       - name: Install dependencies
