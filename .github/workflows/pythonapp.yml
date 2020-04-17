@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     container: firedrakeproject/firedrake
     steps:
-      - run: sudo chown -R $USER:$USER /home/github/actions-runner/_work/TTiP
+      - run: sudo chown -R $USER:$USER /__w/TTiP
       - uses: actions/checkout@v2
       - name: Install dependencies
         run: |
