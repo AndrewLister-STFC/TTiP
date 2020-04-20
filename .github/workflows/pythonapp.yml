@@ -50,7 +50,7 @@ jobs:
         run: |
           . /home/firedrake/firedrake/bin/activate
           pip install pylint
-          pylint -d invalid-name TTiP 
+          pylint -d invalid-name TTiP
 
   test:
     runs-on: ubuntu-latest
@@ -70,4 +70,5 @@ jobs:
         run: |
           . /home/firedrake/firedrake/bin/activate
           pip install pytest
+          export PYTHONPATH="$PWD/TTiP:$PYTHONPATH"
           pytest tests/unit
