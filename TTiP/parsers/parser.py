@@ -11,6 +11,7 @@ class SectionParser(ABC):
     """
     The base class, defines the structure of parsers.
     """
+    # pylint: disable=too-few-public-methods
 
     @abstractmethod
     def parse(self, conf):
@@ -32,6 +33,7 @@ class FunctionSectionParser(SectionParser):
         factory (FunctionBuilderFactory):
             A factory for generating functions from the config values.
     """
+    # pylint: disable=too-few-public-methods
     # pylint: disable=abstract-method
 
     def __init__(self, mesh, V):

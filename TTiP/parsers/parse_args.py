@@ -49,6 +49,7 @@ class Node(ABC):
               Initialising is performed by _init below to prevent __new__ from
               reinitialising objects.
         """
+        # pylint: disable=unused-argument
         return
 
     def _init(self):

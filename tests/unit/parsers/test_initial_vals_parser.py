@@ -5,8 +5,9 @@ Test for the initial_vals_parser.py file.
 import unittest
 
 from firedrake import Constant, FunctionSpace, UnitCubeMesh
-from TTiP.parsers.initial_vals_parser import InitialValParser
 from ufl.algebra import Sum
+
+from TTiP.parsers.initial_vals_parser import InitialValParser
 
 
 class TestParse(unittest.TestCase):

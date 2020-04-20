@@ -1,13 +1,17 @@
+"""
+Tests for the read_config.py file.
+"""
 import os
 import tempfile
 import unittest
 from unittest.mock import patch
 
-from firedrake import Constant, Function, Mesh
+from firedrake import Constant, Function
 from firedrake.mesh import MeshGeometry
-from TTiP.core import read_config
 from ufl import FunctionSpace
 from ufl.algebra import Sum
+
+from TTiP.core import read_config
 
 
 class TestInit(unittest.TestCase):
@@ -63,6 +67,9 @@ class TestInit(unittest.TestCase):
         self.assertEqual(c.conf_parser['PARAMETERS']['part1'], '8')
 
     def test_non_existent_config(self):
+        """
+        Test that exception is raised for non-existant config file.
+        """
         with self.assertRaises(ValueError):
             _ = read_config.Config('fake_name.not_a_file')
 

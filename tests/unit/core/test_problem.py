@@ -31,10 +31,12 @@ class TestSetS(unittest.TestCase):
         self.assertEqual(prob.S, new_S)
 
 
+# pylint: disable=no-self-use
 class TestSteadyStateProblem(unittest.TestCase):
     """
     Simple tests for the SteadyStateProblem class.
     """
+
     def test_can_initialise(self):
         """
         Test that the SteadyStateProblems can be instantiated.
@@ -49,6 +51,7 @@ class TestTimeDependantProblem(unittest.TestCase):
     """
     Simple tests for the TimeDependantProblem class.
     """
+
     def test_can_initialise(self):
         """
         Test that the TimeDependantProblem can be instantiated.

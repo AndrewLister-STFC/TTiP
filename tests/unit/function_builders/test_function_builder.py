@@ -4,6 +4,7 @@ Tests for the function_builder.py file
 import unittest
 
 from firedrake import FunctionSpace, UnitCubeMesh
+
 from TTiP.function_builders.function_builder import FunctionBuilder
 
 
@@ -18,7 +19,6 @@ class DummyFunctionBuilder(FunctionBuilder):
         """
         Override abstract method.
         """
-        pass
 
 
 class TestAssign(unittest.TestCase):
@@ -38,6 +38,7 @@ class TestAssign(unittest.TestCase):
         """
         Test that assign sets values correctly.
         """
+        # pylint: disable=protected-access
         self.assertIs(self.func_builder._props['a'], None)
         self.assertIs(self.func_builder._props['b'], None)
         self.func_builder.assign('a', 10)

@@ -50,7 +50,7 @@ jobs:
         run: |
           . /home/firedrake/firedrake/bin/activate
           pip install pylint
-          pylint -d invalid-name TTiP
+          pylint --rcfile=setup.cfg TTiP tests
 
   test:
     runs-on: ubuntu-latest

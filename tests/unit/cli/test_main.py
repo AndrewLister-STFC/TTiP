@@ -1,3 +1,6 @@
+"""
+Tests for the main.py file.
+"""
 import os
 import sys
 import tempfile
@@ -10,6 +13,7 @@ import pytest
 from TTiP.cli import main
 
 
+# pylint: disable=attribute-defined-outside-init
 class TestGetArgParser(unittest.TestCase):
     """
     Class for testing the get_argparser method.

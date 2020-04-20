@@ -1,3 +1,6 @@
+"""
+Tests for the solver.py file.
+"""
 import os
 import unittest
 from tempfile import TemporaryDirectory
@@ -5,7 +8,8 @@ from tempfile import TemporaryDirectory
 import numpy as np
 
 from firedrake import (Constant, FunctionSpace, SpatialCoordinate,
-                       UnitCubeMesh, UnitIntervalMesh, exp, pi, sin)
+                       UnitCubeMesh, UnitIntervalMesh, pi, sin)
+
 from TTiP.core.problem import SteadyStateProblem, TimeDependantProblem
 from TTiP.core.solver import Solver
 
@@ -142,6 +146,7 @@ class TestSolve(unittest.TestCase):
             print(value)
             print(expected)
             self.assertTrue(np.isclose(value, expected).all())
+
 
 class TestIsSteadyState(unittest.TestCase):
     """

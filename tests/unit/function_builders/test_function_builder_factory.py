@@ -4,13 +4,13 @@ Tests for the function_builder_factory.py file.
 import unittest
 
 import numpy as np
+from firedrake import (Constant, Function, FunctionSpace, UnitCubeMesh,
+                       UnitSquareMesh)
+from ufl.algebra import Sum
 
-from firedrake import Constant, Function, FunctionSpace, UnitCubeMesh, UnitSquareMesh
 from TTiP.function_builders.constant_builder import ConstantBuilder
 from TTiP.function_builders.function_builder_factory import \
     FunctionBuilderFactory
-from TTiP.function_builders.gaussian_builder import GaussianBuilder
-from ufl.algebra import Sum
 
 
 class TestCreateFunctionBuilder(unittest.TestCase):
@@ -119,7 +119,9 @@ class TestCreateFunctionDict(unittest.TestCase):
         gaus_sd = 0.5
         gaus_scale = 10.0
 
-        def const_analytical(x): return const_val
+        def const_analytical(x):
+            # pylint: disable=unused-argument
+            return const_val
 
         def gaus_analytical(x):
             return gaus_scale*np.exp(-0.5*(np.dot((x-gaus_mean)/gaus_sd,

@@ -30,8 +30,9 @@ e.g.
 
 """
 from firedrake import Function, conditional, eq, ge, gt, le, lt, ne
-from TTiP.function_builders.function_builder import FunctionBuilder
 from ufl.core.expr import Expr
+
+from TTiP.function_builders.function_builder import FunctionBuilder
 
 
 class ConditionBuilder(FunctionBuilder):

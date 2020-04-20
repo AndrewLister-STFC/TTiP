@@ -11,6 +11,7 @@ class MockProblem:
     """
     A mock problem to allow simpler declaration of IterationMethod instances.
     """
+    # pylint: disable=too-few-public-methods
 
     def __init__(self):
         """
@@ -36,6 +37,7 @@ class TestUpdate(unittest.TestCase):
         """
         Test that access to hidden variables is not allowed.
         """
+        # pylint: disable=protected-access
         self.im._FakeMethod = lambda x: 'Fail'
         with self.assertRaises(ValueError):
             self.im.update(None, method='_FakeMethod')
@@ -71,6 +73,7 @@ class TestUpdate(unittest.TestCase):
         Utility function to store args in self.
         Used to replace a function in the above test.
         """
+        #pylint: disable=attribute-defined-outside-init
         self.stashed_args = (args, kwargs)
 
 
