@@ -69,16 +69,17 @@ class GaussianBuilder(FunctionBuilder):
 
         xs = SpatialCoordinate(self.mesh)
         if not isinstance(mean, list):
-            mean = [mean]*len(xs)
+            mean = [mean] * len(xs)
         if not isinstance(sd, list):
-            sd = [sd]*len(xs)
+            sd = [sd] * len(xs)
 
         gaussian = Function(self.V)
-        components = [exp(-(x-m)**2/2/s**2) for x, m, s in zip(xs, mean, sd)]
+        components = [exp(-(x - m)**2 / 2 / s**2)
+                      for x, m, s in zip(xs, mean, sd)]
         product = components[0]
         for c in components[1:]:
             product *= c
 
-        gaussian.interpolate(scale*product)
+        gaussian.interpolate(scale * product)
 
         return gaussian

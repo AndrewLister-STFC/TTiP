@@ -70,7 +70,7 @@ def run(config_file, debug=False):
 
         # Set up parameters
         density = config.get_parameters()
-        C = 1.5*e*density
+        C = 1.5 * e * density
         problem.set_C(C)
 
     logger.debug('Building sources..')
@@ -91,7 +91,7 @@ def run(config_file, debug=False):
     initial_val = config.get_initial_val()
     problem.T.assign(initial_val)
 
-    logger.info('Problem set up (%.1fs)', time.time()-start_time)
+    logger.info('Problem set up (%.1fs)', time.time() - start_time)
     logger.info('Running the solve.')
     start_time = time.time()
     # Solve

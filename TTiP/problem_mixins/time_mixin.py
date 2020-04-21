@@ -72,7 +72,7 @@ class TimeMixin:
         self.t_max = 1e-9
         self.dt = 1e-10
         self._dt_invc = Constant(0)
-        self.steps = self.t_max/self.dt
+        self.steps = self.t_max / self.dt
 
         self.steady_state = True
 
@@ -92,7 +92,7 @@ class TimeMixin:
         Returns:
             Function: The updated F.
         """
-        delT = (self.T - self.T_)*self._dt_invc
+        delT = (self.T - self.T_) * self._dt_invc
         return replace(F, {self._delT: delT})
 
     def remove_timescale(self):
@@ -131,16 +131,16 @@ class TimeMixin:
         if num_var_none > 1:
             raise ValueError('Must specify at least 2 of total, dt, and steps')
 
-        if num_var_none == 0 and t_max != dt*steps:
+        if num_var_none == 0 and t_max != dt * steps:
             raise ValueError('Conflicting arguments. Try specifying only 2 of '
                              'total, dt, and steps.')
 
         if t_max is None:
-            t_max = dt*steps
+            t_max = dt * steps
         if dt is None:
-            dt = t_max/steps
+            dt = t_max / steps
         if steps is None:
-            steps = t_max/dt
+            steps = t_max / dt
 
         if steps != int(steps):
             steps = int(steps + 1)
@@ -148,7 +148,7 @@ class TimeMixin:
 
         self.t_max = t_max
         self.dt = dt
-        self._dt_invc.assign(1/dt)
+        self._dt_invc.assign(1 / dt)
         self.steps = steps
         self.steady_state = False
 
@@ -170,4 +170,4 @@ class TimeMixin:
         Returns:
             Function: The complete mass matrix section using delT.
         """
-        return self.C*self._delT*self.v*dx
+        return self.C * self._delT * self.v * dx

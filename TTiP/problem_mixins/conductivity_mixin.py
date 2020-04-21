@@ -64,8 +64,8 @@ class SpitzerHarmMixin:
         Returns:
             Function: The Spitzer-Harm conductivity
         """
-        tmp = 288*pi*sqrt(2)*epsilon_0**2/sqrt(e*m_e)
-        tmp = tmp*pow(self.T, 5/2)/(self.coulomb_ln*self.Z)
+        tmp = 288 * pi * sqrt(2) * epsilon_0**2 / sqrt(e * m_e)
+        tmp = tmp * pow(self.T, 5 / 2) / (self.coulomb_ln * self.Z)
 
         return tmp
 

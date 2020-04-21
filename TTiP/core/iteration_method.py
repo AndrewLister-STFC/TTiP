@@ -80,7 +80,7 @@ class IterationMethod:
         Returns:
             Function: THe updated function
         """
-        T = 0.5*(self.T + self.T_)
+        T = 0.5 * (self.T + self.T_)
         return replace(F, {self.T: T})
 
     def Theta(self, F, theta):
@@ -98,5 +98,5 @@ class IterationMethod:
             theta (float):
                 Weight of T (the weight of T_ is 1-theta)
         """
-        T = theta*self.T + (1-theta)*self.T_
+        T = theta * self.T + (1 - theta) * self.T_
         return replace(F, {self.T: T})

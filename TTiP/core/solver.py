@@ -102,7 +102,7 @@ class Solver:
             for i in range(self.problem.steps):
                 solver.solve()
 
-                perc = int(100*(i+1)/self.problem.steps)
+                perc = int(100 * (i + 1) / self.problem.steps)
                 if perc > last_perc:
                     print(f'{perc}%')
                     last_perc = perc

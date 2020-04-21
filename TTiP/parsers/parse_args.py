@@ -7,7 +7,8 @@ from abc import ABC, abstractmethod
 
 from firedrake import Function, SpatialCoordinate
 
-# pylint: disable=attribute-defined-outside-init, arguments-differ, protected-access
+# pylint: disable=attribute-defined-outside-init,arguments-differ
+# pylint: disable=protected-access
 
 
 class Node(ABC):
@@ -178,7 +179,7 @@ class Expression(Node):
                  '/': (1, operator.truediv, '/'),
                  '*': (1, operator.mul, '*'),
                  '^': (2, operator.pow, '^'),
-                 'e': (3, lambda x, y: x*10**y, 'e'),
+                 'e': (3, lambda x, y: x * 10**y, 'e'),
                  '<left>': (4, lambda l, r: l, '')}
 
     def _init(self, s):

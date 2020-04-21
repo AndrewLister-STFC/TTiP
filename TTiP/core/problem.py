@@ -81,7 +81,7 @@ class Problem:
         Returns:
             Function: A complete stiffness matrix section.
         """
-        return self.K*dot(grad(self.T), grad(self.v))*dx
+        return self.K * dot(grad(self.T), grad(self.v)) * dx
 
     def _f(self):
         """
@@ -90,7 +90,7 @@ class Problem:
         Returns:
             Function: A complete source function section.
         """
-        return self.S*self.v*dx
+        return self.S * self.v * dx
 
 
 class SteadyStateProblem(SpitzerHarmMixin, BoundaryMixin, Problem):

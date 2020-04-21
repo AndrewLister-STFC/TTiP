@@ -110,17 +110,17 @@ class BoundaryMixin:
         if isinstance(g, (float, int)):
             g = Constant(g)
 
-        integrand = -1*self.K*self.v*dot(grad(self.T), norm)
+        integrand = -1 * self.K * self.v * dot(grad(self.T), norm)
 
         if surface == 'all':
             dbc = DirichletBC(V=self.V, g=g, sub_domain="on_boundary")
-            self.a += integrand*ds
+            self.a += integrand * ds
         else:
             dbc = DirichletBC(V=self.V, g=g, sub_domain=surface)
             try:
-                self.a += sum(integrand*ds(s) for s in surface)
+                self.a += sum(integrand * ds(s) for s in surface)
             except TypeError:
-                self.a += integrand*ds(surface)
+                self.a += integrand * ds(surface)
 
         self.bcs.append(dbc)
         self._has_boundary = True
@@ -150,19 +150,19 @@ class BoundaryMixin:
         if isinstance(alpha, (float, int)):
             alpha = Constant(alpha)
 
-        a_integrand = alpha*self.v*self.T
-        L_integrand = self.v*g
+        a_integrand = alpha * self.v * self.T
+        L_integrand = self.v * g
 
         if surface == 'all':
-            self.a += a_integrand*ds
-            self.L += L_integrand*ds
+            self.a += a_integrand * ds
+            self.L += L_integrand * ds
         else:
             try:
-                self.a += sum(a_integrand*ds(s) for s in surface)
-                self.L += sum(L_integrand*ds(s) for s in surface)
+                self.a += sum(a_integrand * ds(s) for s in surface)
+                self.L += sum(L_integrand * ds(s) for s in surface)
             except TypeError:
-                self.a += a_integrand*ds(surface)
-                self.L += L_integrand*ds(surface)
+                self.a += a_integrand * ds(surface)
+                self.L += L_integrand * ds(surface)
 
         self._has_boundary = True
 
@@ -179,5 +179,5 @@ class BoundaryMixin:
                                  ' been set')
 
         norm = FacetNormal(self.mesh)
-        self.a += -1*self.K*self.v*dot(grad(self.T), norm)*ds
+        self.a += -1 * self.K * self.v * dot(grad(self.T), norm) * ds
         self._has_boundary = False

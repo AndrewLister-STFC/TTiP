@@ -19,6 +19,7 @@ class FunctionBuilderFactory:
     Also provdes a utility function to create the function given a list of
     properties.
     """
+
     def __init__(self, mesh, V):
         """
         Initialiser for the FunctionBuilderFactory
@@ -51,10 +52,15 @@ class FunctionBuilderFactory:
         name = function_type.lower() + '_builder'
         module = import_module('.' + name, __package__)
 
-        classes = getmembers(
-            module, lambda m: isclass(m) and not isabstract(m)
-            and issubclass(m, FunctionBuilder)
-            )
+        def isFunctionBuilder(obj):
+            """
+            Util func to check if the object is a FunctionBuilder
+            """
+            if isclass(obj) and not isabstract(obj):
+                return issubclass(obj, FunctionBuilder)
+            return False
+
+        classes = getmembers(module, isFunctionBuilder)
 
         if len(classes) != 1:
             raise RuntimeError('Could not get unique function builder for {}.'

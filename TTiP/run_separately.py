@@ -2,10 +2,10 @@
 This file is used to test the solve.
 """
 
-from scipy.constants import e, pi
-
 from firedrake import (BoxMesh, Constant, Function, FunctionSpace,
                        SpatialCoordinate, sin)
+from scipy.constants import e, pi
+
 from TTiP.core.problem import TimeDependantProblem
 from TTiP.core.solver import Solver
 
@@ -38,7 +38,7 @@ def main():
     # =========================================================================
     # ===== PARAMETERS ========================================================
     # =========================================================================
-    C = Constant(1.1e27)*1.5*e
+    C = Constant(1.1e27) * 1.5 * e
     problem.set_C(C)
 
     # =========================================================================
@@ -47,8 +47,8 @@ def main():
     x = SpatialCoordinate(mesh)
     val = 1
     for pos, length in zip(x, extent):
-        val *= sin(pos/length*pi)**2
-    S = Function(V).interpolate(1e9*val)
+        val *= sin(pos / length * pi)**2
+    S = Function(V).interpolate(1e9 * val)
     problem.set_S(S)
 
     # =========================================================================
@@ -62,8 +62,8 @@ def main():
     x = SpatialCoordinate(mesh)
     val = 1
     for pos, length in zip(x, extent):
-        val *= sin(2*pos/length*pi)
-    problem.T_.interpolate(100 + 1000*val)
+        val *= sin(2 * pos / length * pi)
+    problem.T_.interpolate(100 + 1000 * val)
     problem.T.assign(problem.T_)
 
     # =========================================================================
