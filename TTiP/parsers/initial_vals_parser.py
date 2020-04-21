@@ -1,6 +1,8 @@
 """
 This contains the parser for parsing the INITALVALUE section of the config.
 """
+from firedrake import Constant
+
 from TTiP.parsers.parser import FunctionSectionParser
 
 
@@ -25,7 +27,7 @@ class InitialValParser(FunctionSectionParser):
                 The function space that the functions should belong to.
         """
         super().__init__(mesh, V)
-        self.initial_val = None
+        self.initial_val = Constant(0)
 
     def parse(self, conf):
         """
@@ -37,4 +39,5 @@ class InitialValParser(FunctionSectionParser):
                 The full INITIALVALUE section from the config.
         """
         init_vals = self.factory.create_function_dict(conf)
-        self.initial_val = sum(init_vals.values())
+        if init_vals:
+            self.initial_val = sum(init_vals.values())

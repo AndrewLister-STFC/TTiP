@@ -1,6 +1,8 @@
 """
 This contains the parser for parsing the SOURCES section of the config.
 """
+from firedrake import Constant
+
 from TTiP.parsers.parser import FunctionSectionParser
 
 
@@ -25,7 +27,7 @@ class SourcesParser(FunctionSectionParser):
                 The function space that the functions should belong to.
         """
         super().__init__(mesh, V)
-        self.source = None
+        self.source = Constant(0)
 
     def parse(self, conf):
         """
@@ -36,4 +38,5 @@ class SourcesParser(FunctionSectionParser):
                 The full SOURCES section from the config.
         """
         sources = self.factory.create_function_dict(conf)
-        self.source = sum(sources.values())
+        if sources:
+            self.source = sum(sources.values())
