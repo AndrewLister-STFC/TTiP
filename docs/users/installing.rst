@@ -9,6 +9,10 @@ Firedrake
 TTiP uses `Firedrake <https://firedrakeproject.org/index.html>`__
 to solve the underlying equations. To install this, please see the install page
 in their documentation `here <https://firedrakeproject.org/download.html>`__.
+Alternatively, firedrake has a docker image available
+`here <https://hub.docker.com/r/firedrakeproject/firedrake/>`__, this image
+contains a build of Ubuntu with firedrakes dependencies pre-installed,
+and will be much faster than building from scratch.
 
 Firedrake in turn uses the widely used PETSc which will be installed with
 Firedrake but can take some time.
