@@ -76,9 +76,15 @@ jobs:
           . /home/firedrake/firedrake/bin/activate
           python -m pip install --upgrade pip
           python -m pip install .
+          pip install pytest
+          pip install pytest-cov
       - name: Run Unit tests
         run: |
           . /home/firedrake/firedrake/bin/activate
-          pip install pytest
           export PYTHONPATH="$PWD/TTiP:$PYTHONPATH"
-          pytest tests/unit
+          pytest --cov=TTiP --cov-report=xml -cov-report=term tests/unit
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v1
+        with:
+          flags: unittests
+          fail-ci-if-error: true
