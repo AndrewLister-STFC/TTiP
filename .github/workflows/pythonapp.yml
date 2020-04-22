@@ -82,7 +82,7 @@ jobs:
         run: |
           . /home/firedrake/firedrake/bin/activate
           export PYTHONPATH="$PWD/TTiP:$PYTHONPATH"
-          pytest --cov=TTiP --cov-report=xml -cov-report=term tests/unit
+          pytest --cov=TTiP --cov-report=xml --cov-report=term tests/unit
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1
         with:
