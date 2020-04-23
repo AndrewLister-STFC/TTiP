@@ -180,7 +180,8 @@ class Expression(Node):
                  '*': (1, operator.mul, '*'),
                  '^': (2, operator.pow, '^'),
                  'e': (3, lambda x, y: x * 10**y, 'e'),
-                 '<left>': (4, lambda l, r: l, '')}
+                 '<negate>': (4, lambda l, r: -r, '-'),
+                 '<left>': (5, lambda l, r: l, '')}
 
     def _init(self, s):
         """
@@ -223,10 +224,16 @@ class Expression(Node):
                 self._right = None
             return
 
+        if s[0] == '-':
+            self._left = None
+            self._op = self.operators['<negate>']
+            self.set_right(Expression(s[1:]))
+            return
+
         # Check if s starts with a custom terminal.
         for t in self._custom_terminals:
             if s.startswith(t):
-                tmp_s = s.strip(t)
+                tmp_s = s[len(t):].strip()
                 if tmp_s.startswith(tuple(self.operators.keys())) or not tmp_s:
                     self.set_left(Terminal(t))
                     s = tmp_s
@@ -238,16 +245,17 @@ class Expression(Node):
 
         # For each operator split the string and take the split that minimises
         # the left argument as this will be first.
-        best_partition = [s, '', '']
+        best_partition = (s, '', '')
         for o in self.operators:
             part = s.partition(o)
-            # Ignore leading operator (error or negative)
             is_left = self._left is not None or part[0]
             if is_left and len(part[0]) < len(best_partition[0]):
                 best_partition = part
 
+        left, op, right = best_partition
+
         # Check that an operator was found.
-        if best_partition[0] == s:
+        if left == s:
             # No operator so set left to be a terminal with s.
             self._op = self.operators['<left>']
             if self._left is None:
@@ -256,10 +264,10 @@ class Expression(Node):
                 raise RuntimeError('Failed to parse input: {}'.format(s))
             self._right = None
         else:
-            self._op = self.operators[best_partition[1]]
+            self._op = self.operators[op]
             if self._left is None:
-                self.set_left(Terminal(best_partition[0]))
-            self.set_right(Expression(best_partition[2]))
+                self.set_left(Terminal(left))
+            self.set_right(Expression(right))
 
     def set_left(self, f):
         """
@@ -365,11 +373,16 @@ class Expression(Node):
         Returns:
             str: The expression as a string.
         """
+        str_rep = ''
+        if self._left is not None:
+            str_rep += str(self._left)
         if self._op[2]:
-            return '({}{}{})'.format(str(self._left),
-                                     str(self._op[2]),
-                                     str(self._right))
-        return str(self._left)
+            str_rep += str(self._op[2])
+        if self._right is not None:
+            str_rep += str(self._right)
+        if self._left is not None and self._right is not None:
+            str_rep = '({})'.format(str_rep)
+        return str_rep
 
 
 class List(Node):
@@ -577,9 +590,13 @@ def process_args(conf, factory=None, str_keys=['type'], clean=True):
                 if k == keys[0]:
                     if expr.ready():
                         tmp = v
-                        for n in keys[1:-1]:
-                            tmp = v[n]
-                        tmp[keys[-1]] = expr.evaluate(mesh, V)
+                        val = expr.evaluate(mesh, V)
+                        if len(keys) > 1:
+                            for n in keys[1:-1]:
+                                tmp = v[n]
+                            tmp[keys[-1]] = val
+                        else:
+                            v = val
                         evaluated.append(i)
                     else:
                         break
