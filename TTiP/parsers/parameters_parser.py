@@ -2,7 +2,7 @@
 This contains the parser for parsing the PARAMETERS section of the config.
 """
 from TTiP.parsers.parser import FunctionSectionParser
-
+from firedrake import Constant
 
 class ParametersParser(FunctionSectionParser):
     """
@@ -10,7 +10,11 @@ class ParametersParser(FunctionSectionParser):
 
     Attributes:
         density (Function):
-            The sum of all the function specified for density.
+            The value specified for density.
+        coulomb_ln (Function):
+            The value specified for the coulomb_ln.
+        Z (Function):
+            The value specified for Z.
     """
     # pylint: disable=too-few-public-methods
 
@@ -25,7 +29,9 @@ class ParametersParser(FunctionSectionParser):
                 The function space that the functions should belong to.
         """
         super().__init__(mesh, V)
-        self.density = None
+        self.density = Constant(1.1e27)
+        self.coulomb_ln = Constant(10)
+        self.Z = Constant(12)
 
     def parse(self, conf):
         """
@@ -36,4 +42,5 @@ class ParametersParser(FunctionSectionParser):
                 The full PARAMETERS section from the config.
         """
         all_functions = self.factory.create_function_dict(conf)
-        self.density = all_functions['density']
+        for k in ['density', 'Z', 'coulomb_ln']:
+            setattr(self, k, all_functions[k.lower()])

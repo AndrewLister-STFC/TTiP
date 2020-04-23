@@ -106,16 +106,21 @@ class Config:
     def get_parameters(self):
         """
         Get the parameters for the problem.
-        (Currently only density - more will be added)
+        Currently this is:
+         - density
+         - coulomb_ln (The coulomb logarithm)
+         - Z (The ionization term)
 
         Returns:
-            Function: The density of the plasma
+            (Function, Function, Function):
+                The density, coulomb logarithm, and ionization energy of the
+                plasma respectively.
         """
         if self._mesh is None:
             self.get_mesh()
         parser = ParametersParser(self._mesh, self._V)
         parser.parse(self.conf_parser['PARAMETERS'])
-        return parser.density
+        return parser.density, parser.coulomb_ln, parser.Z
 
     def get_initial_val(self):
         """

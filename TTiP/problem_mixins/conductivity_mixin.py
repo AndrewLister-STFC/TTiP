@@ -3,7 +3,7 @@ Contains the conductivity classes for extending problems.
 """
 from scipy.constants import e, epsilon_0, m_e, pi
 
-from firedrake import Constant, replace, sqrt
+from firedrake import Function, replace, sqrt
 
 
 class SpitzerHarmMixin:
@@ -16,6 +16,8 @@ class SpitzerHarmMixin:
            pass
 
     Required Attributes (for mixin):
+        V (FunctionSpace):
+            The function space that functions must be defined on.
         T (Function):
             The trial function to solve for.
         K (Function):
@@ -41,8 +43,8 @@ class SpitzerHarmMixin:
         """
         super().__init__(*args, **kwargs)
 
-        self.coulomb_ln = self._coulomb_ln()
-        self.Z = self._Z()
+        self.coulomb_ln = Function(self.V)
+        self.Z = Function(self.V)
         K = self._K()
         self.set_K(K)
 
@@ -51,7 +53,7 @@ class SpitzerHarmMixin:
         Set the value for K in self.a and self.L.
 
         Args:
-            K (Function): The function so replace K with.
+            K (Function): The function to replace K with.
         """
         self.a = replace(self.a, {self.K: K})
         self.L = replace(self.L, {self.K: K})
@@ -69,22 +71,24 @@ class SpitzerHarmMixin:
 
         return tmp
 
-    def _coulomb_ln(self):
+    def set_coulomb_ln(self, coulomb_ln):
         """
-        Create the coulomb logarithm.
+        Set the coulomb logarithm in K (and propagate).
 
-        Returns:
-            Function: The coulomb log.
+        Args:
+            coulomb_ln (Function): The function to replace coulomn_ln with.
         """
-        # pylint: disable=no-self-use
-        return Constant(10)
+        K = replace(self.K, {self.coulomb_ln: coulomb_ln})
+        self.coulomb_ln = coulomb_ln
+        self.set_K(K)
 
-    def _Z(self):
+    def set_Z(self, Z):
         """
-        Create the ionization energy.
+        Set the ionization energy in K (and propagate).
 
-        Returns:
-            Function: The ionization energy.
+        Args:
+            Z (Function): The function to replace Z with.
         """
-        # pylint: disable=no-self-use
-        return Constant(12)
+        K = replace(self.K, {self.Z: Z})
+        self.Z = Z
+        self.set_K(K)

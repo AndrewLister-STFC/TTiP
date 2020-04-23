@@ -59,6 +59,9 @@ def run(config_file, debug=False):
     # Setup mesh and function space
     mesh, V = config.get_mesh()
 
+    # Get parameters
+    density, coulomb_ln, Z = config.get_parameters()
+
     logger.debug('Setting timescales..')
     # Set up timescale
     steps, dt, t_max = config.get_time()
@@ -69,9 +72,12 @@ def run(config_file, debug=False):
         problem.set_timescale(steps=steps, dt=dt, t_max=t_max)
 
         # Set up parameters
-        density = config.get_parameters()
         C = 1.5 * e * density
         problem.set_C(C)
+
+    # Set up remaining parameters
+    problem.set_coulomb_ln(coulomb_ln)
+    problem.set_Z(Z)
 
     logger.debug('Building sources..')
     # Set up source
