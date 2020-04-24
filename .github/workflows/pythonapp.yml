@@ -24,7 +24,7 @@ jobs:
           . /home/firedrake/firedrake/bin/activate
           python -m pip install --upgrade pip
           python -m pip install .
-          pip install flake8
+          pip install -r test-requirements.txt
       - name: Lint with flake8 (required action)
         run: |
           . /home/firedrake/firedrake/bin/activate
@@ -49,7 +49,7 @@ jobs:
           . /home/firedrake/firedrake/bin/activate
           python -m pip install --upgrade pip
           python -m pip install .
-          pip install pylint
+          pip install -r test-requirements.txt
       - name: Lint with Pylint (required action)
         run: |
           . /home/firedrake/firedrake/bin/activate
@@ -76,8 +76,7 @@ jobs:
           . /home/firedrake/firedrake/bin/activate
           python -m pip install --upgrade pip
           python -m pip install .
-          pip install pytest
-          pip install pytest-cov
+          pip install -r test-requirements.txt
       - name: Run Unit tests
         run: |
           . /home/firedrake/firedrake/bin/activate
