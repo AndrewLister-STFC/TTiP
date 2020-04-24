@@ -4,9 +4,9 @@ Tests for the boundaries_mixin.py file.
 
 from unittest import TestCase
 
-from firedrake import DirichletBC, FunctionSpace, UnitCubeMesh
+from firedrake import (DirichletBC, FacetNormal, Function, FunctionSpace,
+                       UnitCubeMesh, dot, ds, dx, grad)
 from mock import patch
-
 from TTiP.core.problem import Problem
 from TTiP.problem_mixins.boundaries_mixin import BoundaryMixin
 
@@ -78,9 +78,10 @@ class TestAddDirichlet(TestCase):
         """
         Prepare for tests.
         """
-        mesh = UnitCubeMesh(10, 10, 10)
-        V = FunctionSpace(mesh, 'CG', 1)
-        self.problem = MockProblem(mesh, V)
+        self.mesh = UnitCubeMesh(10, 10, 10)
+        self.V = FunctionSpace(self.mesh, 'CG', 1)
+        self.problem = MockProblem(self.mesh, self.V)
+        self.norm = FacetNormal(self.mesh)
 
     def test_creates_boundary_cond_all(self):
         """
@@ -90,6 +91,22 @@ class TestAddDirichlet(TestCase):
         self.assertEqual(len(self.problem.bcs), 1)
         self.assertIsInstance(self.problem.bcs[0], DirichletBC)
 
+    def test_update_a_all_surface(self):
+        """
+        Test a is updated correctly for a with 'all' surface.
+        """
+        T = self.problem.T
+        v = self.problem.v
+        K = self.problem.K
+        self.problem.a = T * dx
+
+        g = Function(self.V)
+        expected_a = T * dx + -1 * K * v * dot(grad(T), self.norm) * ds
+
+        self.problem.add_dirichlet(g, 'all')
+
+        self.assertEqual(expected_a, self.problem.a)
+
     def test_creates_boundary_cond_single_surface(self):
         """
         Test that a boundary condition is added to the bcs attribte.
@@ -98,6 +115,22 @@ class TestAddDirichlet(TestCase):
         self.assertEqual(len(self.problem.bcs), 1)
         self.assertIsInstance(self.problem.bcs[0], DirichletBC)
 
+    def test_update_a_single_surface(self):
+        """
+        Test a is updated correctly for a with a single surface.
+        """
+        T = self.problem.T
+        v = self.problem.v
+        K = self.problem.K
+        self.problem.a = T * dx
+
+        g = Function(self.V)
+        expected_a = T * dx + -1 * K * v * dot(grad(T), self.norm) * ds(0)
+
+        self.problem.add_dirichlet(g, 0)
+
+        self.assertEqual(expected_a, self.problem.a)
+
     def test_creates_boundary_cond_multiple_surfaces(self):
         """
         Test that a boundary condition is added to the bcs attribte.
@@ -105,6 +138,23 @@ class TestAddDirichlet(TestCase):
         self.problem.add_dirichlet(10, [0, 1, 2])
         self.assertEqual(len(self.problem.bcs), 1)
         self.assertIsInstance(self.problem.bcs[0], DirichletBC)
+
+    def test_update_a_multiple_surfaces(self):
+        """
+        Test a is updated correctly for a with a multiple surfaces.
+        """
+        T = self.problem.T
+        v = self.problem.v
+        K = self.problem.K
+        self.problem.a = T * dx
+
+        g = Function(self.V)
+        expected_a = T * dx + -1 * K * v * dot(grad(T), self.norm) * ds(0)
+        expected_a += -1 * K * v * dot(grad(T), self.norm) * ds(1)
+
+        self.problem.add_dirichlet(g, [0, 1])
+
+        self.assertEqual(expected_a, self.problem.a)
 
     def test_sets_has_boundary(self):
         """
@@ -131,9 +181,9 @@ class TestAddRobin(TestCase):
         """
         Prepare for tests.
         """
-        mesh = UnitCubeMesh(10, 10, 10)
-        V = FunctionSpace(mesh, 'CG', 1)
-        self.problem = MockProblem(mesh, V)
+        self.mesh = UnitCubeMesh(10, 10, 10)
+        self.V = FunctionSpace(self.mesh, 'CG', 1)
+        self.problem = MockProblem(self.mesh, self.V)
 
     def test_sets_has_boundary(self):
         """
@@ -149,6 +199,63 @@ class TestAddRobin(TestCase):
         self.problem._has_boundary = False
         with self.assertRaises(AttributeError):
             self.problem.add_robin(10, 10, 'all')
+
+    def test_updates_single_surface(self):
+        """
+        Test that a and L are set correctly for a single surface.
+        """
+        T = self.problem.T
+        v = self.problem.v
+        self.problem.a = T * dx
+        self.problem.L = T * dx
+
+        alpha = Function(self.V)
+        g = Function(self.V)
+        expected_a = T * dx + alpha * v * T * ds(0)
+        expected_L = T * dx + v * g * ds(0)
+
+        self.problem.add_robin(alpha, g, 0)
+
+        self.assertEqual(expected_a, self.problem.a)
+        self.assertEqual(expected_L, self.problem.L)
+
+    def test_updates_all_surfaces(self):
+        """
+        Test that a and L are set correctly for 'all' surface.
+        """
+        T = self.problem.T
+        v = self.problem.v
+        self.problem.a = T * dx
+        self.problem.L = T * dx
+
+        alpha = Function(self.V)
+        g = Function(self.V)
+        expected_a = T * dx + alpha * v * T * ds
+        expected_L = T * dx + v * g * ds
+
+        self.problem.add_robin(alpha, g, 'all')
+
+        self.assertEqual(expected_a, self.problem.a)
+        self.assertEqual(expected_L, self.problem.L)
+
+    def test_updates_multiple_surfaces(self):
+        """
+        Test that a and L are set correctly for two surfaces.
+        """
+        T = self.problem.T
+        v = self.problem.v
+        self.problem.a = T * dx
+        self.problem.L = T * dx
+
+        alpha = Function(self.V)
+        g = Function(self.V)
+        expected_a = T * dx + alpha * v * T * ds(0) + alpha * v * T * ds(1)
+        expected_L = T * dx + v * g * ds(0) + v * g * ds(1)
+
+        self.problem.add_robin(alpha, g, [0, 1])
+
+        self.assertEqual(expected_a, self.problem.a)
+        self.assertEqual(expected_L, self.problem.L)
 
 
 class TestSetNoBoundry(TestCase):
