@@ -236,14 +236,29 @@ class TestGetParameters(unittest.TestCase):
             s.density = x is self.conf.conf_parser['PARAMETERS']
 
         with patch.object(read_config.ParametersParser, 'parse', new_func):
-            self.assertTrue(self.conf.get_parameters())
+            works, _, _ = self.conf.get_parameters()
+            self.assertTrue(works)
 
-    def test_correct_type(self):
+    def test_density_correct_type(self):
         """
         Test that the density is a Function.
         """
-        d = self.conf.get_parameters()
+        d, _, _ = self.conf.get_parameters()
         self.assertIsInstance(d, (Function, Constant, Sum))
+
+    def test_coulomb_ln_correct_type(self):
+        """
+        Test that the coulomb_ln is a Function.
+        """
+        _, cl, _ = self.conf.get_parameters()
+        self.assertIsInstance(cl, (Function, Constant, Sum))
+
+    def test_Z_correct_type(self):
+        """
+        Test that Z is a Function.
+        """
+        _, _, Z = self.conf.get_parameters()
+        self.assertIsInstance(Z, (Function, Constant, Sum))
 
 
 class TestGetInitialVal(unittest.TestCase):

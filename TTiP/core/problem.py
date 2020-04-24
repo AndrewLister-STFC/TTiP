@@ -2,7 +2,7 @@
 This file stores the base problem and any created by adding mixins.
 """
 from firedrake import Function, TestFunction, dot, dx, grad, replace
-
+from ufl import UFLException
 
 from TTiP.problem_mixins.boundaries_mixin import BoundaryMixin
 from TTiP.problem_mixins.conductivity_mixin import SpitzerHarmMixin
@@ -71,8 +71,7 @@ class Problem:
             S (Function):
                 The new value for S.
         """
-        self.L = replace(self.L, {self.S: S})
-        self.S = S
+        self._update_func('S', S)
 
     def _A(self):
         """
@@ -91,6 +90,30 @@ class Problem:
             Function: A complete source function section.
         """
         return self.S * self.v * dx
+
+    def _update_func(self, name, val):
+        """
+        Utility function to update a function in the main attributes.
+
+        Args:
+            name (str): The name of the function to update.
+            val (Function): The new value for the function.
+
+        Raises:
+            AttributeError: If name is not in self.
+        """
+        if not hasattr(self, name):
+            raise AttributeError('Cannot update {}'.format(name))
+
+        attrs = vars(self).copy()
+        old_val = getattr(self, name)
+        for attr_name, attr_val in attrs.items():
+            try:
+                updated_val = replace(attr_val, {old_val: val})
+            except UFLException:
+                pass
+            else:
+                setattr(self, attr_name, updated_val)
 
 
 class SteadyStateProblem(SpitzerHarmMixin, BoundaryMixin, Problem):

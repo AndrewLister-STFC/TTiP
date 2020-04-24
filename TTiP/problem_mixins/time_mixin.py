@@ -160,8 +160,7 @@ class TimeMixin:
             C (Function):
                 The heat capacity for the problem.
         """
-        self.a = replace(self.a, {self.C: C})
-        self.C = C
+        self._update_func('C', C)
 
     def _M(self):
         """

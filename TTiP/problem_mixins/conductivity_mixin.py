@@ -3,7 +3,7 @@ Contains the conductivity classes for extending problems.
 """
 from scipy.constants import e, epsilon_0, m_e, pi
 
-from firedrake import Function, replace, sqrt
+from firedrake import Function, sqrt
 
 
 class SpitzerHarmMixin:
@@ -46,18 +46,7 @@ class SpitzerHarmMixin:
         self.coulomb_ln = Function(self.V)
         self.Z = Function(self.V)
         K = self._K()
-        self.set_K(K)
-
-    def set_K(self, K):
-        """
-        Set the value for K in self.a and self.L.
-
-        Args:
-            K (Function): The function to replace K with.
-        """
-        self.a = replace(self.a, {self.K: K})
-        self.L = replace(self.L, {self.K: K})
-        self.K = K
+        self._update_func('K', K)
 
     def _K(self):
         """
@@ -78,9 +67,7 @@ class SpitzerHarmMixin:
         Args:
             coulomb_ln (Function): The function to replace coulomn_ln with.
         """
-        K = replace(self.K, {self.coulomb_ln: coulomb_ln})
-        self.coulomb_ln = coulomb_ln
-        self.set_K(K)
+        self._update_func('coulomb_ln', coulomb_ln)
 
     def set_Z(self, Z):
         """
@@ -89,6 +76,4 @@ class SpitzerHarmMixin:
         Args:
             Z (Function): The function to replace Z with.
         """
-        K = replace(self.K, {self.Z: Z})
-        self.Z = Z
-        self.set_K(K)
+        self._update_func('Z', Z)

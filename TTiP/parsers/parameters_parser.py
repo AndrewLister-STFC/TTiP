@@ -1,8 +1,10 @@
 """
 This contains the parser for parsing the PARAMETERS section of the config.
 """
-from TTiP.parsers.parser import FunctionSectionParser
 from firedrake import Constant
+
+from TTiP.parsers.parser import FunctionSectionParser
+
 
 class ParametersParser(FunctionSectionParser):
     """
@@ -43,4 +45,5 @@ class ParametersParser(FunctionSectionParser):
         """
         all_functions = self.factory.create_function_dict(conf)
         for k in ['density', 'Z', 'coulomb_ln']:
-            setattr(self, k, all_functions[k.lower()])
+            if k in all_functions:
+                setattr(self, k, all_functions[k.lower()])

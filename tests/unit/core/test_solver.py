@@ -14,6 +14,7 @@ from TTiP.core.problem import SteadyStateProblem, TimeDependantProblem
 from TTiP.core.solver import Solver
 
 
+# pylint: disable=protected-access
 class TestSolve(unittest.TestCase):
     """
     Tests for the solve method.
@@ -38,7 +39,7 @@ class TestSolve(unittest.TestCase):
         prob = SteadyStateProblem(mesh=self.m, V=self.V)
         file_path = os.path.join(self.out_dir.name, 'out.pvd')
 
-        prob.set_K(Constant(1))
+        prob._update_func('K', Constant(1))
         prob.set_S(Constant(0))
         prob.set_no_boundary()
 
@@ -60,7 +61,7 @@ class TestSolve(unittest.TestCase):
         prob = TimeDependantProblem(mesh=self.m, V=self.V)
         file_path = os.path.join(self.out_dir.name, 'out.pvd')
 
-        prob.set_K(Constant(1))
+        prob._update_func('K', Constant(1))
         prob.set_S(Constant(0))
         prob.set_no_boundary()
 
@@ -86,7 +87,7 @@ class TestSolve(unittest.TestCase):
         prob = SteadyStateProblem(mesh=self.m, V=self.V)
         file_path = os.path.join(self.out_dir.name, 'out.pvd')
 
-        prob.set_K(Constant(1))
+        prob._update_func('K', Constant(1))
         prob.set_S(Constant(0))
         prob.add_boundary('dirichlet', g=10, surface='all')
 
@@ -121,7 +122,7 @@ class TestSolve(unittest.TestCase):
         file_path = os.path.join(self.out_dir.name, 'out.pvd')
 
         prob.set_C(Constant(1))
-        prob.set_K(Constant(1))
+        prob._update_func('K', Constant(1))
         prob.set_S(Constant(0))
         prob.set_timescale(steps=100, dt=0.00001)
         prob.add_boundary('dirichlet', g=0, surface='all')
