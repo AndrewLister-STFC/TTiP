@@ -2,7 +2,8 @@
 This file stores the base problem and any created by adding mixins.
 """
 from firedrake import Function, TestFunction, dot, dx, grad, replace
-from ufl import UFLException
+from ufl import Form, Integral
+from ufl.core.expr import Expr
 
 from TTiP.problem_mixins.boundaries_mixin import BoundaryMixin
 from TTiP.problem_mixins.conductivity_mixin import SpitzerHarmMixin
@@ -108,11 +109,8 @@ class Problem:
         attrs = vars(self).copy()
         old_val = getattr(self, name)
         for attr_name, attr_val in attrs.items():
-            try:
+            if isinstance(attr_val, (Form, Integral, Expr)):
                 updated_val = replace(attr_val, {old_val: val})
-            except UFLException:
-                pass
-            else:
                 setattr(self, attr_name, updated_val)
 
 
