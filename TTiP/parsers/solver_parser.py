@@ -36,10 +36,11 @@ class SolverParser(SectionParser):
             conf (configparser section or dict):
                 The full SOLVER section from the config.
         """
+        known_vars = list(vars(self))
         all_inps = process_args(conf,
                                 factory=None,
                                 str_keys=['file_path', 'method'])
         self.file_path = all_inps['file_path']
         self.method = all_inps['method']
         self.params = {k: v for k, v in all_inps.items()
-                       if k not in ['file_path', 'method']}
+                       if k not in known_vars}

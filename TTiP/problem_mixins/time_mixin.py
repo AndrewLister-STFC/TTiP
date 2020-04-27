@@ -1,7 +1,11 @@
 """
 Contains the TimeMixin class for extending problems.
+Also contains the IterationMethod class used by TimeMixin.
 """
-from firedrake import Constant, Function, dx, replace
+from firedrake import Constant, Function, dx
+from TTiP.util.logger import get_logger
+
+LOGGER = get_logger()
 
 
 class TimeMixin:
@@ -78,22 +82,24 @@ class TimeMixin:
 
         self.a += self._M()
 
-    def approx_delT(self, F=None):
+    def set_method(self, method='BackwardEuler', **kwargs):
         """
-        Replace the delT placeholder with the simple finite difference
-        approximation:
+        Replace T with the correct substitution for the method, then replace
+        the delT placeholder with the simple finite difference approximation:
         dT/dt ~ (T - T_)/delta_t
 
         Args:
-            F (Function, optional):
-                The function to replace `delT` in. If None, this will use
-                `self.a`. Defaults to None.
-
-        Returns:
-            Function: The updated F.
+            method (str, optional):
+                The method to use. Defaults to 'BackwardEuler'.
         """
+        T = self.T
+        iter_method = IterationMethod(self)
+        substitution = iter_method.get_substitution(method, **kwargs)
+        self._update_func('T', substitution)
+        self.T = T
+
         delT = (self.T - self.T_) * self._dt_invc
-        return replace(F, {self._delT: delT})
+        self._update_func('_delT', delT)
 
     def remove_timescale(self):
         """
@@ -131,9 +137,14 @@ class TimeMixin:
         if num_var_none > 1:
             raise ValueError('Must specify at least 2 of total, dt, and steps')
 
-        if num_var_none == 0 and t_max != dt * steps:
-            raise ValueError('Conflicting arguments. Try specifying only 2 of '
-                             'total, dt, and steps.')
+        if num_var_none == 0:
+            calc_steps = int(t_max/dt)
+            if calc_steps != t_max/dt:
+                calc_steps += 1
+
+            if steps != calc_steps:
+                raise ValueError('Conflicting arguments. Try specifying only 2'
+                                 ' of total, dt, and steps.')
 
         if t_max is None:
             t_max = dt * steps
@@ -144,7 +155,7 @@ class TimeMixin:
 
         if steps != int(steps):
             steps = int(steps + 1)
-            raise RuntimeWarning("steps is not an integer, rounding up.")
+            LOGGER.warn("steps is not an integer, rounding up.")
 
         self.t_max = t_max
         self.dt = dt
@@ -170,3 +181,88 @@ class TimeMixin:
             Function: The complete mass matrix section using delT.
         """
         return self.C * self._delT * self.v * dx
+
+
+class IterationMethod:
+    """
+    Dispatch table style class.
+    """
+
+    def __init__(self, problem):
+        """
+        Initializer for the IterationMethod.
+        Defines new and old T.
+
+        Args:
+            problem (TimeMixin, Problem):
+                The problem to take T and T_ from.
+        """
+        self.T = problem.T
+        self.T_ = problem.T_
+
+    def get_substitution(self, method, **kwargs):
+        """
+        Return the function to substitute in place of T for the given method.
+
+        Args:
+            method (str):
+                The method to use.
+
+        Raises:
+            ValueError: If the method does not exist.
+
+        Returns:
+            Function: The function to substitute T for.
+        """
+        if method[0] == '_':
+            raise ValueError('Not a valid method.')
+        try:
+            return getattr(self, method)(**kwargs)
+        except AttributeError:
+            raise ValueError('Not a valid method.')
+
+    def BackwardEuler(self):
+        """
+        Backward Euler leaves T as T in the setup that is used.
+
+        Returns:
+            Function: The function to substitute T for.
+        """
+        return self.T
+
+    def ForwardEuler(self):
+        """
+        Forward Euler sets T to T_ in the setup that is used.
+
+        Returns:
+            Function: The function to substitute T for.
+        """
+        return self.T_
+
+    def CrankNicolson(self):
+        """
+        Crank Nicolson sets T to (T + T_)/2 in the setup that is used.
+
+        Returns:
+            Function: THe updated function
+        """
+        return 0.5 * (self.T + self.T_)
+
+    def Theta(self, theta):
+        """
+        The Theta model sets T to a weighted mean of T and T_.
+        This takes 1 extra argument which is the weighting.
+
+        Setting:
+          theta=0.0 is equivalent to ForwardEuler
+          theta=0.5 is equivalent to CrankNicholson
+          theta=1.0 is equivalent to BackwardEuler
+
+        Args:
+            theta (float):
+                Weight of T (the weight of T_ is 1-theta)
+
+        Returns:
+            Function: The function to substitute T for.
+        """
+        return theta * self.T + (1 - theta) * self.T_

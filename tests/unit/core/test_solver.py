@@ -131,6 +131,7 @@ class TestSolve(unittest.TestCase):
         prob.T_.interpolate(10*sin(x[0]*pi*3))
         prob.T.assign(prob.T_)
 
+        prob.set_method('CrankNicolson')
         solver = Solver(prob)
 
         def analytical(x, t):
@@ -141,7 +142,7 @@ class TestSolve(unittest.TestCase):
         t = 0
         for i in range(10):
             t = prob.dt*(i+1)*prob.steps
-            solver.solve(file_path=file_path, method='CrankNicolson')
+            solver.solve(file_path=file_path)
             value = solver.u.at(coords)
             expected = analytical(coords, t)
             print(value)

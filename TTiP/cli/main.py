@@ -100,10 +100,16 @@ def run(config_file, debug=False):
     logger.info('Problem set up (%.1fs)', time.time() - start_time)
     logger.info('Running the solve.')
     start_time = time.time()
+
     # Solve
     file_path, method, params = config.get_solver_params()
+    try:
+        problem.set_method(method, **params)
+    except AttributeError:
+        pass
+
     solver = Solver(problem)
-    solver.solve(file_path=file_path, method=method, **params)
+    solver.solve(file_path=file_path)
     logger.info('Success (%.1fs) - Results are stored in: %s',
                 time.time() - start_time, file_path)
 

@@ -4,7 +4,6 @@ This file holds the solver class which is used to run the FEM solve.
 from firedrake import (H1, File, NonlinearVariationalProblem,
                        NonlinearVariationalSolver)
 
-from TTiP.core.iteration_method import IterationMethod
 from TTiP.problem_mixins.boundaries_mixin import BoundaryMixin
 from TTiP.problem_mixins.time_mixin import TimeMixin
 
@@ -54,8 +53,7 @@ class Solver:
             'snes_max_L_solve_fail': 10,
             'snes_max_it': 100}
 
-    def solve(self, file_path='ttip_result/solution.pvd',
-              method='BackwardEuler', **kwargs):
+    def solve(self, file_path='ttip_result/solution.pvd', **kwargs):
         """
         Setup and solve the nonlinear problem.
         Save value to file given.
@@ -67,17 +65,9 @@ class Solver:
                 vtk files will be generated in the same directory as the pvd.
                 It is recommended that this is a separate drectory per run.
                 Defaults to 'TTiP_result/solution.pvd'.
-            method (string, optional):
-                If not steady state, this is used to define the method for
-                time iterations. Defaults to 'BackwardEuler'.
         """
         F = self.problem.a - self.problem.L
         steady_state = self.is_steady_state()
-
-        if not steady_state:
-            iter_method = IterationMethod(self.problem)
-            F = iter_method.update(F, method, **kwargs)
-            F = self.problem.approx_delT(F)
 
         if isinstance(self.problem, BoundaryMixin):
             var_prob = NonlinearVariationalProblem(
