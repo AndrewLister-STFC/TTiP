@@ -138,8 +138,8 @@ class TimeMixin:
             raise ValueError('Must specify at least 2 of total, dt, and steps')
 
         if num_var_none == 0:
-            calc_steps = int(t_max/dt)
-            if calc_steps != t_max/dt:
+            calc_steps = int(t_max / dt)
+            if calc_steps != t_max / dt:
                 calc_steps += 1
 
             if steps != calc_steps:
@@ -155,7 +155,7 @@ class TimeMixin:
 
         if steps != int(steps):
             steps = int(steps + 1)
-            LOGGER.warn("steps is not an integer, rounding up.")
+            LOGGER.warning("steps is not an integer, rounding up.")
 
         self.t_max = t_max
         self.dt = dt

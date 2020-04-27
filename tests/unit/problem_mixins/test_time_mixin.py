@@ -10,6 +10,7 @@ from TTiP.core.problem import Problem
 from TTiP.problem_mixins.time_mixin import IterationMethod, TimeMixin
 
 
+# pylint: disable=attribute-defined-outside-init, protected-access
 class MockProblem(TimeMixin, Problem):
     """
     A dummy class to allow instantiating the mixin.

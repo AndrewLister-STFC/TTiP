@@ -53,7 +53,7 @@ class Solver:
             'snes_max_L_solve_fail': 10,
             'snes_max_it': 100}
 
-    def solve(self, file_path='ttip_result/solution.pvd', **kwargs):
+    def solve(self, file_path='ttip_result/solution.pvd'):
         """
         Setup and solve the nonlinear problem.
         Save value to file given.
