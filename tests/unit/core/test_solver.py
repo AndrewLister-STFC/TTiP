@@ -45,7 +45,7 @@ class TestSolve(unittest.TestCase):
 
         solver = Solver(prob)
         solver.u.assign(10)
-        solver.solve(file_path=file_path, method='BackwardEuler')
+        solver.solve(file_path=file_path)
 
         flist = os.listdir(self.out_dir.name)
         self.assertEqual(len(flist), 3)
@@ -68,9 +68,11 @@ class TestSolve(unittest.TestCase):
         num_steps = 5
         prob.set_timescale(steps=num_steps, dt=0.1)
 
+        prob.set_method('BackwardEuler')
+
         solver = Solver(prob)
         solver.u.assign(10)
-        solver.solve(file_path=file_path, method='BackwardEuler')
+        solver.solve(file_path=file_path)
 
         flist = os.listdir(self.out_dir.name)
 
@@ -93,7 +95,7 @@ class TestSolve(unittest.TestCase):
 
         solver = Solver(prob)
         solver.u.assign(100)
-        solver.solve(file_path=file_path, method='BackwardEuler')
+        solver.solve(file_path=file_path)
 
         expected = 10
 

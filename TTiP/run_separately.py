@@ -70,9 +70,12 @@ def main():
     # ===== SOLVE =============================================================
     # =========================================================================
     print('Solving')
+
+    problem.set_method(method='Theta', theta=0.5)
+
     solver = Solver(problem)
 
-    solver.solve(method='Theta', theta=0.5)
+    solver.solve()
 
 
 if __name__ == '__main__':
