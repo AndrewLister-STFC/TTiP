@@ -71,11 +71,12 @@ def run(config_file, debug=False):
         problem = TimeDependantProblem(mesh=mesh, V=V)
         problem.set_timescale(steps=steps, dt=dt, t_max=t_max)
 
-        # Set up parameters
-        C = 1.5 * e * density
-        problem.set_C(C)
+        # Set time dependant parameters
+        problem.set_density(density)
 
-    # Set up remaining parameters
+        problem.enable_flux_limiting()
+
+    # Set up other parameters
     problem.set_coulomb_ln(coulomb_ln)
     problem.set_Z(Z)
 

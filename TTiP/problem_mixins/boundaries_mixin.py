@@ -2,7 +2,7 @@
 Contains the BoundaryMixin class for extending problems.
 """
 
-from firedrake import Constant, DirichletBC, FacetNormal, dot, ds, grad
+from firedrake import Constant, DirichletBC, FacetNormal, dot, ds
 
 
 class BoundaryMixin:
@@ -24,8 +24,8 @@ class BoundaryMixin:
             The trial function for the problem.
         v (firedrake.Function):
             The test function for the problem.
-        K (firedrake.Function):
-            A function holding the conductivity for the problem.
+        q (firedrake.Function):
+            A function holding the heat flux.
         a (firedrake.Function):
             The section containing the combination of terms involving both T
             and v.
@@ -46,7 +46,7 @@ class BoundaryMixin:
     V = None
     T = None
     v = None
-    K = None
+    q = None
     a = None
     L = None
 
@@ -110,7 +110,7 @@ class BoundaryMixin:
         if isinstance(g, (float, int)):
             g = Constant(g)
 
-        integrand = -1 * self.K * self.v * dot(grad(self.T), norm)
+        integrand = -1 * self.v * dot(self.q, norm)
 
         if surface == 'all':
             dbc = DirichletBC(V=self.V, g=g, sub_domain="on_boundary")
@@ -179,5 +179,5 @@ class BoundaryMixin:
                                  ' been set')
 
         norm = FacetNormal(self.mesh)
-        self.a += -1 * self.K * self.v * dot(grad(self.T), norm) * ds
+        self.a += -1 * self.v * dot(self.q, norm) * ds
         self._has_boundary = False

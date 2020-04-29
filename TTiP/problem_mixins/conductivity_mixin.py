@@ -1,9 +1,8 @@
 """
 Contains the conductivity classes for extending problems.
 """
-from scipy.constants import e, epsilon_0, m_e, pi
-
 from firedrake import Function, sqrt
+from scipy.constants import e, epsilon_0, m_e, pi
 
 
 class SpitzerHarmMixin:
@@ -39,7 +38,7 @@ class SpitzerHarmMixin:
         """
         Initialiser for SpitzerHarmMixin.
 
-        Creates a new conductivity term and replaces it in a and L.
+        Creates a new conductivity term and replaces K in all functions.
         """
         super().__init__(*args, **kwargs)
 

@@ -31,6 +31,8 @@ class Problem:
         K (firedrake.Function):
             A function to hold the heat conductivity. This defines how the heat
             flows through the mesh.
+        q (firedrake.Function):
+            A function to hold the heat flux (K*grad(T)).
         a (firedrake.Function):
             A function used to combine parts including T and v.
             Used to solve the problem of finding a - L = 0.
@@ -60,6 +62,7 @@ class Problem:
         self.S = Function(V, name='S')
 
         self.K = Function(V, name='K')
+        self.q = self.K * grad(self.T)
 
         self.a = self._A()
         self.L = self._f()
@@ -81,7 +84,7 @@ class Problem:
         Returns:
             Function: A complete stiffness matrix section.
         """
-        return self.K * dot(grad(self.T), grad(self.v)) * dx
+        return dot(self.q, grad(self.v)) * dx
 
     def _f(self):
         """

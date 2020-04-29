@@ -3,8 +3,9 @@ Tests for the time_mixin.py file.
 """
 from unittest import TestCase
 
-from firedrake import FunctionSpace, UnitCubeMesh
+from firedrake import Constant, FunctionSpace, UnitCubeMesh, as_tensor, e, sqrt
 from mock import patch
+from scipy.constants import m_e
 
 from TTiP.core.problem import Problem
 from TTiP.problem_mixins.time_mixin import IterationMethod, TimeMixin
@@ -196,6 +197,158 @@ class TestSetTimescale(TestCase):
         """
         with self.assertRaises(ValueError):
             self.problem.set_timescale(t_max=4.0, dt=0.1, steps=53)
+
+
+class TestEnableFluxLimiting(TestCase):
+    """
+    Tests for the enable_flux_limiting method.
+    """
+
+    def setUp(self):
+        """
+        Create a problem.
+        Set density and T so that bound is -8 < q < 8.
+        """
+        m = UnitCubeMesh(10, 10, 10)
+        V = FunctionSpace(m, 'CG', 1)
+
+        self.problem = MockProblem(m, V)
+
+        self.problem.density = sqrt(m_e / 3 / e**3) / 0.3
+        self.problem.T = Constant(4)
+
+    def test_updates_q(self):
+        """
+        Test that q is updated.
+        """
+        q = self.problem.q
+        self.problem.enable_flux_limiting()
+        self.assertNotEqual(q, self.problem.q)
+
+    def test_bounded_q_both_upper(self):
+        """
+        Test when q is above the bound for 2D in both directions.
+        """
+        self.problem.q = as_tensor([Constant(12.9), Constant(8.2)])
+
+        self.problem.enable_flux_limiting()
+
+        q_1, q_2 = self.problem.q
+
+        self.assertAlmostEqual(q_1(0.0), 8.0)
+        self.assertAlmostEqual(q_2(0.0), 8.0)
+
+    def test_bounded_q_single_upper(self):
+        """
+        Test when q is above the bound for 2D in one direction.
+        """
+        self.problem.q = as_tensor([Constant(12.9), Constant(7.2)])
+
+        self.problem.enable_flux_limiting()
+
+        q_1, q_2 = self.problem.q
+
+        self.assertAlmostEqual(q_1(0.0), 8.0)
+        self.assertAlmostEqual(q_2(0.0), 7.2)
+
+    def test_bounded_q_both_inside(self):
+        """
+        Test when q is inside the bound for 2D in both directions.
+        """
+        self.problem.q = as_tensor([Constant(1.9), Constant(7.2)])
+
+        self.problem.enable_flux_limiting()
+
+        q_1, q_2 = self.problem.q
+
+        self.assertAlmostEqual(q_1(0.0), 1.9)
+        self.assertAlmostEqual(q_2(0.0), 7.2)
+
+    def test_bounded_q_lower(self):
+        """
+        Test when q is below the bound for 2D in both directions.
+        """
+        self.problem.q = as_tensor([Constant(-19.9), Constant(-27.2)])
+
+        self.problem.enable_flux_limiting()
+
+        q_1, q_2 = self.problem.q
+
+        self.assertAlmostEqual(q_1(0.0), -8.0)
+        self.assertAlmostEqual(q_2(0.0), -8.0)
+
+
+class TestMin(TestCase):
+    """
+    Tests for the _min method.
+    """
+
+    def setUp(self):
+        """
+        Create a problem.
+        """
+        m = UnitCubeMesh(10, 10, 10)
+        V = FunctionSpace(m, 'CG', 1)
+
+        self.problem = MockProblem(m, V)
+
+    def test_a_lt_b(self):
+        """
+        Test returns a if a < b.
+        """
+        val = self.problem._min(1.0, 3.6)
+        self.assertAlmostEqual(val, 1.0)
+
+    def test_a_eq_b(self):
+        """
+        Test returns a if a == b.
+        """
+        val = self.problem._min(1.5, 1.5)
+        self.assertAlmostEqual(val, 1.5)
+
+    def test_a_gt_b(self):
+        """
+        Test returns b if a > b.
+        """
+        val = self.problem._min(1.9, 0.1)
+        self.assertAlmostEqual(val, 0.1)
+
+
+class TestMax(TestCase):
+    """
+    Tests for the _max method.
+    """
+
+    def setUp(self):
+        """
+        Create a problem.
+        """
+        m = UnitCubeMesh(10, 10, 10)
+        V = FunctionSpace(m, 'CG', 1)
+
+        self.problem = MockProblem(m, V)
+
+    def test_a_lt_b(self):
+        """
+        Test returns b if a < b.
+        """
+        val = self.problem._max(1.0, 3.6)
+        self.assertAlmostEqual(val, 3.6)
+
+    def test_a_eq_b(self):
+        """
+        Test returns a if a == b.
+        """
+        val = self.problem._max(1.5, 1.5)
+        self.assertAlmostEqual(val, 1.5)
+
+    def test_a_gt_b(self):
+        """
+        Test returns a if a > b.
+        """
+        val = self.problem._max(1.9, 0.1)
+        self.assertAlmostEqual(val, 1.9)
+
 
 # =============================================================================
 # ========== ITERATION METHOD CLASS TESTS =====================================

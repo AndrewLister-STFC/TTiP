@@ -2,7 +2,9 @@
 Contains the TimeMixin class for extending problems.
 Also contains the IterationMethod class used by TimeMixin.
 """
-from firedrake import Constant, Function, dx
+from firedrake import Constant, Function, as_tensor, dx, e, sqrt
+from scipy.constants import m_e
+
 from TTiP.util.logger import get_logger
 
 LOGGER = get_logger()
@@ -28,8 +30,8 @@ class TimeMixin:
         a (firedrake.Function):
             The section containing the combination of terms involving both T
             and v.
-        L (firedrake.Function):
-            The section containing the combination of terms not in a.
+        q (Function):
+            The heat flux.
 
     Attributes:
         T_ (firedrake.Function):
@@ -58,7 +60,6 @@ class TimeMixin:
     T = None
     v = None
     a = None
-    L = None
 
     def __init__(self, *args, **kwargs):
         """
@@ -71,7 +72,9 @@ class TimeMixin:
         self.T_ = Function(self.V, name='T_')
         self._delT = Function(self.V, name='delT')
 
-        self.C = Function(self.V, name='C')
+        self.density = Function(self.V, name='density')
+
+        self.C = 1.5 * self.density * e
 
         self.t_max = 1e-9
         self.dt = 1e-10
@@ -163,15 +166,15 @@ class TimeMixin:
         self.steps = steps
         self.steady_state = False
 
-    def set_C(self, C):
+    def set_density(self, density):
         """
-        Update C in all formulas (namely a).
+        Update density in all formulas (namely a).
 
         Args:
-            C (Function):
-                The heat capacity for the problem.
+            density (Function):
+                The density for the problem.
         """
-        self._update_func('C', C)
+        self._update_func('density', density)
 
     def _M(self):
         """
@@ -181,6 +184,50 @@ class TimeMixin:
             Function: The complete mass matrix section using delT.
         """
         return self.C * self._delT * self.v * dx
+
+    def enable_flux_limiting(self):
+        r"""
+        Add flux limiting to ensure temperature is bound by physical
+        constraints.
+
+        This replaces the existing flux with the minimum of the flux and a
+        physical limit:
+
+        .. math::
+
+           n_e e T_e \sqrt{\frac{3 e T_e}{m_e}}
+        """
+        q_ex = self.q
+        q_fl = self.density * e * self.T * sqrt(3 * e * self.T / m_e)
+        q = [self._min(q_tmp, 0.3 * q_fl) for q_tmp in q_ex]
+        q = as_tensor([self._max(q_tmp, -0.3 * q_fl) for q_tmp in q])
+        self._update_func('q', q)
+
+    def _min(self, a, b):
+        """
+        Return the minimum of a and b.
+
+        Args:
+            a (Function or num): The first value.
+            b (Function or num): The second value.
+
+        Returns:
+            Function or num: The minimum of a and b.
+        """
+        return 0.5 * (a + b - abs(a - b))
+
+    def _max(self, a, b):
+        """
+        Return the maximum of a and b.
+
+        Args:
+            a (Function or num): The first value.
+            b (Function or num): The second value.
+
+        Returns:
+            Function or num: The maximum of a and b.
+        """
+        return 0.5 * (a + b + abs(a - b))
 
 
 class IterationMethod:

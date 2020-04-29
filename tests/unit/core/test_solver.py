@@ -123,7 +123,7 @@ class TestSolve(unittest.TestCase):
         prob = TimeDependantProblem(mesh=m, V=V)
         file_path = os.path.join(self.out_dir.name, 'out.pvd')
 
-        prob.set_C(Constant(1))
+        prob._update_func('C', Constant(1))
         prob._update_func('K', Constant(1))
         prob.set_S(Constant(0))
         prob.set_timescale(steps=100, dt=0.00001)

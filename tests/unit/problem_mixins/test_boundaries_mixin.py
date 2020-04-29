@@ -97,11 +97,11 @@ class TestAddDirichlet(TestCase):
         """
         T = self.problem.T
         v = self.problem.v
-        K = self.problem.K
+        q = self.problem.q
         self.problem.a = T * dx
 
         g = Function(self.V)
-        expected_a = T * dx + -1 * K * v * dot(grad(T), self.norm) * ds
+        expected_a = T * dx + -1 * v * dot(q, self.norm) * ds
 
         self.problem.add_dirichlet(g, 'all')
 
@@ -121,11 +121,11 @@ class TestAddDirichlet(TestCase):
         """
         T = self.problem.T
         v = self.problem.v
-        K = self.problem.K
+        q = self.problem.q
         self.problem.a = T * dx
 
         g = Function(self.V)
-        expected_a = T * dx + -1 * K * v * dot(grad(T), self.norm) * ds(0)
+        expected_a = T * dx + -1 * v * dot(q, self.norm) * ds(0)
 
         self.problem.add_dirichlet(g, 0)
 
@@ -145,12 +145,12 @@ class TestAddDirichlet(TestCase):
         """
         T = self.problem.T
         v = self.problem.v
-        K = self.problem.K
+        q = self.problem.q
         self.problem.a = T * dx
 
         g = Function(self.V)
-        expected_a = T * dx + -1 * K * v * dot(grad(T), self.norm) * ds(0)
-        expected_a += -1 * K * v * dot(grad(T), self.norm) * ds(1)
+        expected_a = T * dx + -1 * v * dot(q, self.norm) * ds(0)
+        expected_a += -1 * v * dot(q, self.norm) * ds(1)
 
         self.problem.add_dirichlet(g, [0, 1])
 
