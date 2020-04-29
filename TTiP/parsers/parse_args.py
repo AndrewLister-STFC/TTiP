@@ -118,7 +118,7 @@ class Node(ABC):
         Clear the custom terminals. It is advised that this is done before
         parsing any new sections.
         """
-        cls._custom_terminals = {}
+        cls._custom_terminals.clear()
 
     @classmethod
     def subscribe_terminal(cls, name, value=None):
