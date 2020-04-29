@@ -5,7 +5,7 @@ Tests for the boundaries_mixin.py file.
 from unittest import TestCase
 
 from firedrake import (DirichletBC, FacetNormal, Function, FunctionSpace,
-                       UnitCubeMesh, dot, ds, dx, grad)
+                       UnitCubeMesh, dot, ds, dx)
 from mock import patch
 from TTiP.core.problem import Problem
 from TTiP.problem_mixins.boundaries_mixin import BoundaryMixin

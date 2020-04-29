@@ -4,7 +4,7 @@ This file is used to test the solve.
 
 from firedrake import (BoxMesh, Constant, Function, FunctionSpace,
                        SpatialCoordinate, sin)
-from scipy.constants import e, pi
+from scipy.constants import pi
 
 from TTiP.core.problem import TimeDependantProblem
 from TTiP.core.solver import Solver
@@ -38,8 +38,9 @@ def main():
     # =========================================================================
     # ===== PARAMETERS ========================================================
     # =========================================================================
-    C = Constant(1.1e27) * 1.5 * e
-    problem.set_C(C)
+    problem.set_density(Constant(1.1e27))
+    problem.set_coulomb_ln(Constant(10))
+    problem.set_Z(Constant(10))
 
     # =========================================================================
     # ===== SOURCES ===========================================================

@@ -6,8 +6,6 @@ import argparse
 import sys
 import time
 
-from scipy.constants import e
-
 from TTiP.core.problem import SteadyStateProblem, TimeDependantProblem
 from TTiP.core.read_config import Config
 from TTiP.core.solver import Solver
