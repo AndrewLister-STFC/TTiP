@@ -18,6 +18,9 @@ class Node(ABC):
     For any node, call evaluate to get the parsed value including all children.
 
     Class Attributes:
+        _reserved_terminals (list<string>):
+            A list of strings that are reserved.
+            e.g. "false"
         _custom_terminals (dict):
             A dictionary holding a global (across all nodes) list of custom
             terminals. Custom terminals will be a name and corresponding result
@@ -29,6 +32,7 @@ class Node(ABC):
             Which terminals have been used in the node and children.
     """
 
+    _reserved_terminals = []
     _custom_terminals = {}
 
     def __new__(cls, *args, **kwargs):
@@ -230,8 +234,8 @@ class Expression(Node):
             self.set_right(Expression(s[1:]))
             return
 
-        # Check if s starts with a custom terminal.
-        for t in self._custom_terminals:
+        # Check if s starts with a custom or reserved terminal.
+        for t in list(self._custom_terminals) + self._reserved_terminals:
             if s.startswith(t):
                 tmp_s = s[len(t):].strip()
                 if tmp_s.startswith(tuple(self.operators.keys())) or not tmp_s:
@@ -456,6 +460,13 @@ class Terminal(Node):
         if s in self._custom_terminals:
             self._used_terminals = [s]
 
+        # Check if terminals have been added. If not, add them.
+        if 'false' not in self._reserved_terminals:
+            self._reserved_terminals.extend(
+                ['false', 'true',
+                 'x[0]', 'x[1]', 'x[2]',
+                 'x', 'y', 'z'])
+
     def evaluate(self, mesh=None, V=None):
         """
         Evaluate the terminal and return the parsed value
@@ -582,7 +593,7 @@ def process_args(conf, factory=None, str_keys=['type'], clean=True):
         tmp_dict[keys[-1]] = v
 
     # Worst case, need to do len(to_evaluate) attempts.
-    for _ in range(len(to_evaluate)):
+    for _ in range(len(to_evaluate) + 1):
         subscribed = []
         for k, v in util_functions.items():
             evaluated = []

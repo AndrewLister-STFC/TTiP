@@ -35,7 +35,7 @@ class TestSetMethod(TestCase):
         V = FunctionSpace(m, 'CG', 1)
 
         self.problem = MockProblem(m, V)
-        self.stashed_args = ()
+        self.stashed_args = ([], {})
 
     def stash_args(self, *args, **kwargs):
         """

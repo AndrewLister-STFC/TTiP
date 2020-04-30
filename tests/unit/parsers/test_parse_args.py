@@ -4,12 +4,16 @@ Test for the parse_args.py file.
 
 from unittest import TestCase
 
-from firedrake import UnitCubeMesh, Function, FunctionSpace
+from firedrake import Function, FunctionSpace, UnitCubeMesh
 from numpy import isclose
 from pytest import mark
 
+from TTiP.function_builders.function_builder_factory import \
+    FunctionBuilderFactory
 from TTiP.parsers.parse_args import (Expression, List, Node, Terminal,
                                      process_args)
+
+# pylint: disable=attribute-defined-outside-init, protected-access
 
 # =============================================================================
 # ========== Node Class =======================================================
@@ -289,6 +293,7 @@ class TestList(TestCase):
     """
     Tests for the List class.
     """
+
     def test_create_list(self):
         """
         Test a list is created with parsed values.
@@ -307,6 +312,7 @@ class TestTerminal(TestCase):
     """
     Test that terminals are evaluated correctly.
     """
+
     def tearDown(self):
         """
         Ensure no remaining terminals.
@@ -424,4 +430,114 @@ class TestTerminal(TestCase):
 
 
 class TestProcessArgs(TestCase):
-    pass
+    def setUp(self):
+        self.mesh = UnitCubeMesh(10, 10, 10)
+        self.V = FunctionSpace(self.mesh, 'CG', 1)
+        self.factory = FunctionBuilderFactory(self.mesh, self.V)
+
+    def test_dict_with_only_values(self):
+        conf = {'test': '3.0',
+                'foo': 'false'}
+
+        expected = {'test': 3.0,
+                    'foo': False}
+
+        args = process_args(conf)
+        self.assertDictEqual(args, expected)
+
+    def test_nested_values(self):
+        conf = {'test.a': '3.0',
+                'test.b': '4.1',
+                'foo.b': 'false'}
+
+        expected = {'test': {'a': 3.0,
+                             'b': 4.1},
+                    'foo': {'b': False}}
+
+        args = process_args(conf)
+        self.assertDictEqual(args, expected)
+
+    def test_dict_with_functions(self):
+        conf = {'test.type': 'constant',
+                'test.value': '4.1',
+                'foo.type': 'gaussian',
+                'foo.scale': '10',
+                'foo.mean': '0.5',
+                'foo.sd': '0.5'}
+
+        expected = {'test': {'type': 'constant',
+                             'value': 4.1},
+                    'foo': {'type': 'gaussian',
+                            'scale': 10,
+                            'mean': 0.5,
+                            'sd': 0.5}}
+
+        args = process_args(conf)
+        self.assertDictEqual(args, expected)
+
+    def test_dict_with_interim_values(self):
+        conf = {'test': 'foo + 1',
+                '_foo': '2.0'}
+
+        expected = {'test': 3.0}
+
+        args = process_args(conf)
+        self.assertDictEqual(args, expected)
+
+    def test_dict_with_interim_functions(self):
+        conf = {'test': 'foo + 2.0',
+                '_foo.type': 'gaussian',
+                '_foo.scale': '10',
+                '_foo.mean': '0.5',
+                '_foo.sd': '0.5'}
+
+        args = process_args(conf, self.factory)
+        self.assertListEqual(list(args.keys()), ['test'])
+        self.assertAlmostEqual(args['test']([0.5, 0.5, 0.5]).item(), 12.0)
+
+    def test_dict_with_many_interim_values(self):
+
+        conf = {'test': 'foo + 1',
+                '_foo': 'bar + baz',
+                '_bar': '17.0',
+                '_baz': 'bar * 2'}
+
+        expected = {'test': 17.0 + (17.0 * 2) + 1}
+
+        args = process_args(conf)
+        self.assertDictEqual(args, expected)
+
+    def test_str_keys_arg(self):
+
+        conf = {'test': 'foo + 1',
+                'test2': '2.0'}
+
+        expected = {'test': 'foo + 1',
+                    'test2': 2.0}
+
+        args = process_args(conf, str_keys=['test'])
+        self.assertDictEqual(args, expected)
+
+    def test_clean_arg_false(self):
+        conf = {'_foo': '2.0',
+                '_bar': '1.0'}
+        args = process_args(conf)
+
+        conf = {'test': 'foo + bar'}
+        args = process_args(conf, clean=False)
+
+        expected = {'test': 3.0}
+
+        self.assertDictEqual(args, expected)
+
+    def test_clean_arg_true(self):
+        conf = {'_foo': '2.0',
+                '_bar': '1.0'}
+        args = process_args(conf)
+
+        conf = {'test': 'foo + bar'}
+        args = process_args(conf, clean=True)
+
+        expected = {'test': 'foobar'}
+
+        self.assertDictEqual(args, expected)
