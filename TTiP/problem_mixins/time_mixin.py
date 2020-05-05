@@ -2,8 +2,8 @@
 Contains the TimeMixin class for extending problems.
 Also contains the IterationMethod class used by TimeMixin.
 """
-from firedrake import Constant, Function, as_tensor, dx, e, sqrt
-from scipy.constants import m_e
+from firedrake import Constant, Function, as_tensor, dx, sqrt
+from scipy.constants import m_e, e
 
 from TTiP.util.logger import get_logger
 

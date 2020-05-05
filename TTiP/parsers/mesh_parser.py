@@ -39,8 +39,7 @@ class MeshParser(SectionParser):
         if 'type' not in conf:
             raise AttributeError('Must define a mesh type.')
 
-        mesh_type = conf.get('type')
-        conf.pop('type')
+        mesh_type = conf.pop('type')
         if mesh_type.lower() == 'file':
             mesh_type = 'Mesh'
 
@@ -48,6 +47,10 @@ class MeshParser(SectionParser):
             mesh_type += 'Mesh'
 
         mesh_cls = getattr(firedrake, mesh_type)
+
+        element = conf.pop('element')
+        order = conf.getint('order')
+        conf.pop('order')
 
         processed_args = []
         args = conf.pop('params', None)
@@ -61,3 +64,4 @@ class MeshParser(SectionParser):
             kwargs[k] = expr.evaluate(None)
 
         self.mesh = mesh_cls(*processed_args, **kwargs)
+        self.func_space = firedrake.FunctionSpace(self.mesh, element, order)

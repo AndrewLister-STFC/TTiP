@@ -5,7 +5,6 @@ import configparser
 import os
 from inspect import getfile
 
-from firedrake import FunctionSpace
 from TTiP import resources
 from TTiP.parsers.boundary_conds_parser import BoundaryCondsParser
 from TTiP.parsers.initial_vals_parser import InitialValParser
@@ -99,7 +98,7 @@ class Config:
             parser = MeshParser()
             parser.parse(self.conf_parser['MESH'])
             self._mesh = parser.mesh
-            self._V = FunctionSpace(self._mesh, 'CG', 1)
+            self._V = parser.func_space
 
         return self._mesh, self._V
 
