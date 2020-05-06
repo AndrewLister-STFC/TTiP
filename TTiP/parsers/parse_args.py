@@ -5,8 +5,7 @@ Utility module for parsing args.
 import operator
 from abc import ABC, abstractmethod
 
-from firedrake import Function, SpatialCoordinate
-
+from firedrake import Function, SpatialCoordinate, cos, exp, sin, tan, sqrt
 # pylint: disable=attribute-defined-outside-init,arguments-differ
 # pylint: disable=protected-access
 
@@ -185,7 +184,16 @@ class Expression(Node):
                  '^': (2, operator.pow, '^'),
                  'e': (3, lambda x, y: x * 10**y, 'e'),
                  '<negate>': (4, lambda l, r: -r, '-'),
-                 '<left>': (5, lambda l, r: l, '')}
+                 '<left>': (11, lambda l, r: l, '')}
+
+    function_priority = 10
+    functions = {'abs': abs,
+                 'cos': cos,
+                 'exp': exp,
+                 'sin': sin,
+                 'sqrt': sqrt,
+                 'tan': tan
+                 }
 
     def _init(self, s):
         """
@@ -218,21 +226,30 @@ class Expression(Node):
                 tmp, rem = rem.split(')', 1)
                 left = left + ')' + tmp
 
-            self.set_left(Expression(left))
-
             if rem:
+                self.set_left(Expression('(' + left + ')'))
                 self._op = self.operators[rem[0]]
                 self.set_right(Expression(rem[1:]))
             else:
+                self.set_left(Expression(left))
                 self._op = self.operators['<left>']
                 self._right = None
             return
 
+        # Check for negate
         if s[0] == '-':
             self._left = None
             self._op = self.operators['<negate>']
             self.set_right(Expression(s[1:]))
             return
+
+        # Check if s starts with a function.
+        for func_name, func in self.functions.items():
+            if s.startswith(func_name + '('):
+                self._left = None
+                self._op = (self.function_priority, func, func_name)
+                self.set_right(Expression(s[len(func_name):]))
+                return
 
         # Check if s starts with a custom or reserved terminal.
         for t in list(self._custom_terminals) + self._reserved_terminals:
@@ -349,6 +366,8 @@ class Expression(Node):
         if isinstance(right, Node):
             right = right.evaluate(mesh, V)
         try:
+            if self._op[2] in self.functions:
+                return self._op[1](right)
             return self._op[1](left, right)
         except TypeError:
             raise RuntimeError('Failed to evaluate "{}".'.format(str(self)))
