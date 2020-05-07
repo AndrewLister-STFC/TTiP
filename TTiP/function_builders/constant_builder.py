@@ -36,7 +36,7 @@ class ConstantBuilder(FunctionBuilder):
             AttributeError: If required properties are not defined.
 
         Returns:
-            Function: firedrake Constant set to te given value.
+            Function: firedrake Constant set to the given value.
         """
         value = self._props['value']
         if value is None:
