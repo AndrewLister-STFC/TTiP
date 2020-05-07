@@ -234,13 +234,16 @@ class TestUpdateTerminal(TestCase):
                    ('2 + 2 / 4 + 1 / 2', 3.0),
                    ('-8e-2 * -100', 8),
                    ('2^2', 4),
-                   ('((8-13e-1)*(1e1+1-2/2)+(4-2)^2-3^(1+3))*-0.1', 1)])
+                   ('((8-13e-1)*(1e1+1-2/2)+(4-2)^2-3^(1+3))*-0.1', 1),
+                   ('abs(-6)', 6),
+                   ('sin(1)^2 + cos(1)^2', 1)])
 def test_expressions(expr_str, expr_val):
     """
     Test that a variety of expressions are correctly parsed.
     """
     expr = Expression(expr_str).evaluate()
     assert isclose(expr, expr_val)
+
 
 @mark.parametrize('expr_str, expr_val',
                   [('1 + 1', '(1+1)'),
@@ -257,13 +260,16 @@ def test_expressions(expr_str, expr_val):
                    ('1 / 2 / 3 / 4', '(((1/2)/3)/4)'),
                    ('2 + 2 / 4 + 1 / 2', '((2+(2/4))+(1/2))'),
                    ('-8e-2 * -100', '((-8e-2)*-100)'),
-                   ('2^2', '(2^2)')])
+                   ('2^2', '(2^2)'),
+                   ('abs(-6)', 'abs(-6)'),
+                   ('sin(1)^2 + cos(1)^2', '((sin(1)^2)+(cos(1)^2))')])
 def test_expression_str(expr_str, expr_val):
     """
     Test that a variety of expressions are correctly parsed.
     """
     expr = Expression(expr_str)
     assert str(expr) == expr_val
+
 
 class TestUsedTerminals(TestCase):
     """

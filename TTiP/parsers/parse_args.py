@@ -402,7 +402,12 @@ class Expression(Node):
         if self._op[2]:
             str_rep += str(self._op[2])
         if self._right is not None:
-            str_rep += str(self._right)
+            r_str = str(self._right)
+            if (self._op[2] in self.functions and
+                    r_str[0] != '(' and
+                    r_str[-1] != ')'):
+                r_str = '(' + r_str + ')'
+            str_rep += r_str
         if self._left is not None and self._right is not None:
             str_rep = '({})'.format(str_rep)
         return str_rep
