@@ -15,7 +15,7 @@ The simplest functions can be defined as::
 
 e.g.::
 
-    radial: 1/(x^2 + y^2)
+    radial: 1/sqrt(x^2 + y^2)
 
 Functions can also be interim functions.
 An interim function is one that is used as a component in other functions but
