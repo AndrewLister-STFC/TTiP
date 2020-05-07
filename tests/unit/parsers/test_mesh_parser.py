@@ -7,6 +7,7 @@ from unittest.mock import patch
 from TTiP.parsers import mesh_parser
 
 
+# pylint: disable=unused-argument
 class TestParse(unittest.TestCase):
     """
     Tests for the parse method.
