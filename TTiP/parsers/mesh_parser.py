@@ -49,8 +49,11 @@ class MeshParser(SectionParser):
         mesh_cls = getattr(firedrake, mesh_type)
 
         element = conf.pop('element')
-        order = conf.getint('order')
-        conf.pop('order')
+        order = conf.pop('order')
+        try:
+            order = int(order)
+        except ValueError as e:
+            raise TypeError from e
 
         processed_args = []
         args = conf.pop('params', None)

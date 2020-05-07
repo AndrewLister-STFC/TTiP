@@ -199,10 +199,10 @@ class TestGetMesh(unittest.TestCase):
         """
         def new_func(s, x):
             s.mesh = x is self.conf.conf_parser['MESH']
+            s.func_space = None
 
         with patch.object(read_config.MeshParser, 'parse', new_func):
-            with patch.object(read_config, 'FunctionSpace', lambda x, y, z: 0):
-                self.assertTrue(self.conf.get_mesh()[0])
+            self.assertTrue(self.conf.get_mesh()[0])
 
     def test_correct_type(self):
         """
