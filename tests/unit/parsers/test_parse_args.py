@@ -234,13 +234,16 @@ class TestUpdateTerminal(TestCase):
                    ('2 + 2 / 4 + 1 / 2', 3.0),
                    ('-8e-2 * -100', 8),
                    ('2^2', 4),
-                   ('((8-13e-1)*(1e1+1-2/2)+(4-2)^2-3^(1+3))*-0.1', 1)])
+                   ('((8-13e-1)*(1e1+1-2/2)+(4-2)^2-3^(1+3))*-0.1', 1),
+                   ('abs(-6)', 6),
+                   ('sin(1)^2 + cos(1)^2', 1)])
 def test_expressions(expr_str, expr_val):
     """
     Test that a variety of expressions are correctly parsed.
     """
     expr = Expression(expr_str).evaluate()
     assert isclose(expr, expr_val)
+
 
 @mark.parametrize('expr_str, expr_val',
                   [('1 + 1', '(1+1)'),
@@ -257,13 +260,16 @@ def test_expressions(expr_str, expr_val):
                    ('1 / 2 / 3 / 4', '(((1/2)/3)/4)'),
                    ('2 + 2 / 4 + 1 / 2', '((2+(2/4))+(1/2))'),
                    ('-8e-2 * -100', '((-8e-2)*-100)'),
-                   ('2^2', '(2^2)')])
+                   ('2^2', '(2^2)'),
+                   ('abs(-6)', 'abs(-6)'),
+                   ('sin(1)^2 + cos(1)^2', '((sin(1)^2)+(cos(1)^2))')])
 def test_expression_str(expr_str, expr_val):
     """
     Test that a variety of expressions are correctly parsed.
     """
     expr = Expression(expr_str)
     assert str(expr) == expr_val
+
 
 class TestUsedTerminals(TestCase):
     """
@@ -453,12 +459,21 @@ class TestTerminal(TestCase):
 
 
 class TestProcessArgs(TestCase):
+    """
+    Tests for the process_args method.
+    """
     def setUp(self):
+        """
+        Create a factory.
+        """
         self.mesh = UnitCubeMesh(10, 10, 10)
         self.V = FunctionSpace(self.mesh, 'CG', 1)
         self.factory = FunctionBuilderFactory(self.mesh, self.V)
 
     def test_dict_with_only_values(self):
+        """
+        Test parses dict correctly with only values.
+        """
         conf = {'test': '3.0',
                 'foo': 'false'}
 
@@ -469,6 +484,9 @@ class TestProcessArgs(TestCase):
         self.assertDictEqual(args, expected)
 
     def test_nested_values(self):
+        """
+        Test parses dict correctly with nested values.
+        """
         conf = {'test.a': '3.0',
                 'test.b': '4.1',
                 'foo.b': 'false'}
@@ -481,6 +499,9 @@ class TestProcessArgs(TestCase):
         self.assertDictEqual(args, expected)
 
     def test_dict_with_functions(self):
+        """
+        Test parses dict correctly with functions.
+        """
         conf = {'test.type': 'constant',
                 'test.value': '4.1',
                 'foo.type': 'gaussian',
@@ -499,6 +520,9 @@ class TestProcessArgs(TestCase):
         self.assertDictEqual(args, expected)
 
     def test_dict_with_interim_values(self):
+        """
+        Test parses dict correctly with interim values.
+        """
         conf = {'test': 'foo + 1',
                 '_foo': '2.0'}
 
@@ -508,6 +532,9 @@ class TestProcessArgs(TestCase):
         self.assertDictEqual(args, expected)
 
     def test_dict_with_interim_functions(self):
+        """
+        Test parses dict correctly with interim functions.
+        """
         conf = {'test': 'foo + 2.0',
                 '_foo.type': 'gaussian',
                 '_foo.scale': '10',
@@ -519,6 +546,9 @@ class TestProcessArgs(TestCase):
         self.assertAlmostEqual(args['test']([0.5, 0.5, 0.5]).item(), 12.0)
 
     def test_dict_with_many_interim_values(self):
+        """
+        Test parses dict correctly with many interim values.
+        """
 
         conf = {'test': 'foo + 1',
                 '_foo': 'bar + baz',
@@ -531,6 +561,9 @@ class TestProcessArgs(TestCase):
         self.assertDictEqual(args, expected)
 
     def test_str_keys_arg(self):
+        """
+        Test parses dict correctly with some entries defined as strings.
+        """
 
         conf = {'test': 'foo + 1',
                 'test2': '2.0'}
@@ -542,6 +575,9 @@ class TestProcessArgs(TestCase):
         self.assertDictEqual(args, expected)
 
     def test_clean_arg_false(self):
+        """
+        Test parses dict correctly with clean set to false.
+        """
         conf = {'_foo': '2.0',
                 '_bar': '1.0'}
         args = process_args(conf)
@@ -554,6 +590,9 @@ class TestProcessArgs(TestCase):
         self.assertDictEqual(args, expected)
 
     def test_clean_arg_true(self):
+        """
+        Test parses dict correctly with clean set to true.
+        """
         conf = {'_foo': '2.0',
                 '_bar': '1.0'}
         args = process_args(conf)
