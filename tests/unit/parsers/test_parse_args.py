@@ -459,12 +459,21 @@ class TestTerminal(TestCase):
 
 
 class TestProcessArgs(TestCase):
+    """
+    Tests for the process_args method.
+    """
     def setUp(self):
+        """
+        Create a factory.
+        """
         self.mesh = UnitCubeMesh(10, 10, 10)
         self.V = FunctionSpace(self.mesh, 'CG', 1)
         self.factory = FunctionBuilderFactory(self.mesh, self.V)
 
     def test_dict_with_only_values(self):
+        """
+        Test parses dict correctly with only values.
+        """
         conf = {'test': '3.0',
                 'foo': 'false'}
 
@@ -475,6 +484,9 @@ class TestProcessArgs(TestCase):
         self.assertDictEqual(args, expected)
 
     def test_nested_values(self):
+        """
+        Test parses dict correctly with nested values.
+        """
         conf = {'test.a': '3.0',
                 'test.b': '4.1',
                 'foo.b': 'false'}
@@ -487,6 +499,9 @@ class TestProcessArgs(TestCase):
         self.assertDictEqual(args, expected)
 
     def test_dict_with_functions(self):
+        """
+        Test parses dict correctly with functions.
+        """
         conf = {'test.type': 'constant',
                 'test.value': '4.1',
                 'foo.type': 'gaussian',
@@ -505,6 +520,9 @@ class TestProcessArgs(TestCase):
         self.assertDictEqual(args, expected)
 
     def test_dict_with_interim_values(self):
+        """
+        Test parses dict correctly with interim values.
+        """
         conf = {'test': 'foo + 1',
                 '_foo': '2.0'}
 
@@ -514,6 +532,9 @@ class TestProcessArgs(TestCase):
         self.assertDictEqual(args, expected)
 
     def test_dict_with_interim_functions(self):
+        """
+        Test parses dict correctly with interim functions.
+        """
         conf = {'test': 'foo + 2.0',
                 '_foo.type': 'gaussian',
                 '_foo.scale': '10',
@@ -525,6 +546,9 @@ class TestProcessArgs(TestCase):
         self.assertAlmostEqual(args['test']([0.5, 0.5, 0.5]).item(), 12.0)
 
     def test_dict_with_many_interim_values(self):
+        """
+        Test parses dict correctly with many interim values.
+        """
 
         conf = {'test': 'foo + 1',
                 '_foo': 'bar + baz',
@@ -537,6 +561,9 @@ class TestProcessArgs(TestCase):
         self.assertDictEqual(args, expected)
 
     def test_str_keys_arg(self):
+        """
+        Test parses dict correctly with some entries defined as strings.
+        """
 
         conf = {'test': 'foo + 1',
                 'test2': '2.0'}
@@ -548,6 +575,9 @@ class TestProcessArgs(TestCase):
         self.assertDictEqual(args, expected)
 
     def test_clean_arg_false(self):
+        """
+        Test parses dict correctly with clean set to false.
+        """
         conf = {'_foo': '2.0',
                 '_bar': '1.0'}
         args = process_args(conf)
@@ -560,6 +590,9 @@ class TestProcessArgs(TestCase):
         self.assertDictEqual(args, expected)
 
     def test_clean_arg_true(self):
+        """
+        Test parses dict correctly with clean set to true.
+        """
         conf = {'_foo': '2.0',
                 '_bar': '1.0'}
         args = process_args(conf)
