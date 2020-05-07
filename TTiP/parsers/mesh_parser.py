@@ -14,6 +14,9 @@ class MeshParser(SectionParser):
         mesh (Mesh):
             This variable holds the instantiated mesh once it has been
             generated.
+        func_space (FunctionSpace):
+            This variable hold the instntiated function space once it has been
+            generated.
     """
     # pylint: disable=too-few-public-methods
 
@@ -23,6 +26,7 @@ class MeshParser(SectionParser):
         """
         super().__init__()
         self.mesh = None
+        self.func_space = None
 
     def parse(self, conf):
         """
