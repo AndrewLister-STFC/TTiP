@@ -2,6 +2,9 @@ r"""
 The Constant function creates a uniform function of `value` across the whole
 domain.
 
+Args:
+    - value (numerical): The constant value.
+
 The exact formula is:
 
 .. math::
@@ -36,7 +39,7 @@ class ConstantBuilder(FunctionBuilder):
             AttributeError: If required properties are not defined.
 
         Returns:
-            Function: firedrake Constant set to te given value.
+            Function: firedrake Constant set to the given value.
         """
         value = self._props['value']
         if value is None:

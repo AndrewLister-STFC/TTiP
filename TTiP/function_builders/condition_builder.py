@@ -2,6 +2,11 @@ r"""
 The condition function allows the user to create a stepped function using an
 operator alongside a left and right hand side (lhs and rhs respectively).
 
+Args:
+    - operator (str): The operator to use.
+    - lhs (str): An expression for the left hand side.
+    - rhs (str): An expression for the right hand side.
+
 The exact formula is:
 
 .. math::
