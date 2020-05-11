@@ -1,6 +1,9 @@
 r"""
 The File function creates an function interpolated from data in a file.
 
+Args:
+  - path (str): The path to the file to interpolate.
+
 The file must be a csv (optionally with a commented header row),
 where the first n columns represent the coords and the final column
 is the value at the coordinate.

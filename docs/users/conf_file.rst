@@ -50,6 +50,7 @@ Available function builders are:
 
 - :ref:`sub_sub_condition`
 - :ref:`sub_sub_constant`
+- :ref:`sub_sub_file`
 - :ref:`sub_sub_gaussian`
 
 .. _sub_sub_condition:
@@ -65,6 +66,13 @@ Constant
 ^^^^^^^^
 
 .. automodule:: TTiP.function_builders.constant_builder
+
+.. _sub_sub_file:
+
+File
+^^^^
+
+.. automodule:: TTiP.function_builders.file_builder
 
 .. _sub_sub_gaussian:
 

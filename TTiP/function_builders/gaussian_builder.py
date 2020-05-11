@@ -4,6 +4,11 @@ The Gaussian function creates a symmetric function with a peak equal to the
 As the distance from this peak increases, the function decays exponentially.
 This decay is controlled by `sd`.
 
+Args:
+    - mean (numerical): The mean for the function.
+    - sd (numerical): The standard deviation of the function.
+    - scale (numerical): The amount to scale the function by.
+
 The exact formula is:
 
 .. math::

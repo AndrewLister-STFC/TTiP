@@ -2,6 +2,9 @@ r"""
 The Constant function creates a uniform function of `value` across the whole
 domain.
 
+Args:
+    - value (numerical): The constant value.
+
 The exact formula is:
 
 .. math::
