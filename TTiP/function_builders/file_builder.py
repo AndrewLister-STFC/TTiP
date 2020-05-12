@@ -22,6 +22,7 @@ linear interpolation is used for higher dimensional problems.
 """
 import os
 
+import numpy as np
 from firedrake import Function, VectorFunctionSpace, interpolate
 from numpy import loadtxt
 from scipy.interpolate import griddata
@@ -70,6 +71,13 @@ class FileBuilder(FunctionBuilder):
 
         method = 'linear' if coords.shape[1] > 2 else 'cubic'
         # Use the external data function to interpolate the values of f.
-        f.dat.data[:] = griddata(coords, vals, X.dat.data, method)
+        interpolated = griddata(coords, vals, X.dat.data, method)
+        if np.isnan(interpolated).any():
+            # Use nearest method to fill in gaps.
+            nearest = griddata(coords, vals, X.dat.data, 'nearest')
+            mask = np.isnan(interpolated)
+            interpolated[mask] = nearest[mask]
+
+        f.dat.data[:] = interpolated
 
         return f
