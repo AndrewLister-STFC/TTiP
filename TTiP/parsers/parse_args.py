@@ -551,7 +551,7 @@ class Terminal(Node):
 
 
 # pylint: disable=dangerous-default-value
-def process_args(conf, factory=None, str_keys=['type'], clean=True):
+def process_args(conf, factory=None, str_keys=['type', 'path'], clean=True):
     """
     Process the input config into a nested dictionary with evaluated values.
     Entries starting with an '_' are classed as interim functions and will not

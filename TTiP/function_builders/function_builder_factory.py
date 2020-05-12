@@ -112,7 +112,7 @@ class FunctionBuilderFactory:
         """
         all_funcs = process_args(conf,
                                  factory=self,
-                                 str_keys=['type'])
+                                 str_keys=['type', 'path'])
 
         funcs_dict = {}
         for k, v in all_funcs.items():
