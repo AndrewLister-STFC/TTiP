@@ -62,12 +62,12 @@ def run(config_file, debug=False):
 
     logger.debug('Setting timescales..')
     # Set up timescale
-    steps, dt, t_max = config.get_time()
-    if steps is None and dt is None and t_max is None:
+    steps, dt, max_t = config.get_time()
+    if steps is None and dt is None and max_t is None:
         problem = SteadyStateProblem(mesh=mesh, V=V)
     else:
         problem = TimeDependantProblem(mesh=mesh, V=V)
-        problem.set_timescale(steps=steps, dt=dt, t_max=t_max)
+        problem.set_timescale(steps=steps, dt=dt, max_t=max_t)
 
         # Set time dependant parameters
         problem.set_density(density)

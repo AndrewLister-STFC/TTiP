@@ -1,7 +1,9 @@
 """
 This file stores the base problem and any created by adding mixins.
 """
-from firedrake import Function, TestFunction, dot, dx, grad, replace
+from firedrake import (Function, TestFunction, as_tensor, dot, dx, grad,
+                       replace, sqrt)
+from scipy.constants import e, m_e
 from ufl import Form, Integral
 from ufl.core.expr import Expr
 
@@ -33,6 +35,8 @@ class Problem:
             flows through the mesh.
         q (firedrake.Function):
             A function to hold the heat flux (K*grad(T)).
+        v_th (firedrake.Function):
+            A function to hold v_th.
         a (firedrake.Function):
             A function used to combine parts including T and v.
             Used to solve the problem of finding a - L = 0.
@@ -62,7 +66,9 @@ class Problem:
         self.S = Function(V, name='S')
 
         self.K = Function(V, name='K')
+
         self.q = self.K * grad(self.T)
+        self.v_th = sqrt(3 * e * self.T / m_e)
 
         self.a = self._A()
         self.L = self._f()
@@ -115,6 +121,69 @@ class Problem:
             if isinstance(attr_val, (Form, Integral, Expr)):
                 updated_val = replace(attr_val, {old_val: val})
                 setattr(self, attr_name, updated_val)
+
+    def bound(self, name, lower=None, upper=None):
+        """
+        Impose bounds on a function.
+        This replaces a function with a bounded version.
+
+        For multi-dimensional functions this will apply bounds elementwise.
+
+        Args:
+            name (str): The name of the attribute to.
+            lower (Function, optional): A lower bound. Defaults to None.
+            upper (Function, optional): An upper bound. Defaults to None.
+
+        Raises:
+            AttributeError: Attribute does not exist.
+        """
+        if not hasattr(self, name):
+            raise AttributeError('No variable: {}'.format(name))
+
+        if lower is None and upper is None:
+            return
+
+        val = getattr(self, name)
+
+        if lower is not None:
+            if val.ufl_shape:
+                val = as_tensor([self._max(v, lower) for v in val])
+            else:
+                val = self._max(val, lower)
+
+        if upper is not None:
+            if val.ufl_shape:
+                val = as_tensor([self._min(v, upper) for v in val])
+            else:
+                val = self._min(val, upper)
+
+        self._update_func(name, val)
+
+    def _min(self, a, b):
+        """
+        Return the minimum of a and b.
+
+        Args:
+            a (Function or num): The first value.
+            b (Function or num): The second value.
+
+        Returns:
+            Function or num: The minimum of a and b.
+        """
+        return 0.5 * (a + b - abs(a - b))
+
+    def _max(self, a, b):
+        """
+        Return the maximum of a and b.
+
+        Args:
+            a (Function or num): The first value.
+            b (Function or num): The second value.
+
+        Returns:
+            Function or num: The maximum of a and b.
+        """
+        return 0.5 * (a + b + abs(a - b))
 
 
 class SteadyStateProblem(SpitzerHarmMixin, BoundaryMixin, Problem):

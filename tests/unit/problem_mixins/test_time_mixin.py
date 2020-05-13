@@ -3,7 +3,7 @@ Tests for the time_mixin.py file.
 """
 from unittest import TestCase
 
-from firedrake import Constant, FunctionSpace, UnitCubeMesh, as_tensor, sqrt
+from firedrake import Constant, FunctionSpace, UnitCubeMesh, UnitSquareMesh, as_tensor, sqrt
 from mock import patch
 from scipy.constants import m_e, e
 
@@ -150,53 +150,53 @@ class TestSetTimescale(TestCase):
         with self.assertRaises(ValueError):
             self.problem.set_timescale(dt=1)
 
-    def test_t_max_and_dt(self):
+    def test_max_t_and_dt(self):
         """
         Test that steps is correctly calculated and values are stored correctly
-        for given t_max and dt.
+        for given max_t and dt.
         """
-        self.problem.set_timescale(t_max=5.3, dt=0.1)
-        self.assertAlmostEqual(self.problem.t_max, 5.3)
+        self.problem.set_timescale(max_t=5.3, dt=0.1)
+        self.assertAlmostEqual(self.problem.max_t, 5.3)
         self.assertAlmostEqual(self.problem.dt, 0.1)
         self.assertEqual(self.problem.steps, 53)
 
-    def test_t_max_and_steps(self):
+    def test_max_t_and_steps(self):
         """
         Test that dt is correctly calculated and values are stored correctly
-        for given t_max and steps.
+        for given max_t and steps.
         """
-        self.problem.set_timescale(t_max=5.3, steps=53)
-        self.assertAlmostEqual(self.problem.t_max, 5.3)
+        self.problem.set_timescale(max_t=5.3, steps=53)
+        self.assertAlmostEqual(self.problem.max_t, 5.3)
         self.assertAlmostEqual(self.problem.dt, 0.1)
         self.assertEqual(self.problem.steps, 53)
 
     def test_dt_and_steps(self):
         """
-        Test that t_max is correctly calculated and values are stored correctly
+        Test that max_t is correctly calculated and values are stored correctly
         for given dt and steps.
         """
         self.problem.set_timescale(dt=0.1, steps=53)
-        self.assertAlmostEqual(self.problem.t_max, 5.3)
+        self.assertAlmostEqual(self.problem.max_t, 5.3)
         self.assertAlmostEqual(self.problem.dt, 0.1)
         self.assertEqual(self.problem.steps, 53)
 
     def test_all_args_consistent(self):
         """
         Test that values are set correctly when given all 3 args if they are
-        consistent. (steps <= t_max/dt < steps + 1)
+        consistent. (steps <= max_t/dt < steps + 1)
         """
-        self.problem.set_timescale(t_max=5.3, dt=0.1, steps=53)
-        self.assertAlmostEqual(self.problem.t_max, 5.3)
+        self.problem.set_timescale(max_t=5.3, dt=0.1, steps=53)
+        self.assertAlmostEqual(self.problem.max_t, 5.3)
         self.assertAlmostEqual(self.problem.dt, 0.1)
         self.assertEqual(self.problem.steps, 53)
 
     def test_all_args_conflicting(self):
         """
         Test that ValueError is raised if args are inconsistent.
-        (t_max/dt - 1  >= steps, or steps > t_max/dt)
+        (max_t/dt - 1  >= steps, or steps > max_t/dt)
         """
         with self.assertRaises(ValueError):
-            self.problem.set_timescale(t_max=4.0, dt=0.1, steps=53)
+            self.problem.set_timescale(max_t=4.0, dt=0.1, steps=53)
 
 
 class TestEnableFluxLimiting(TestCase):
@@ -209,13 +209,13 @@ class TestEnableFluxLimiting(TestCase):
         Create a problem.
         Set density and T so that bound is -8 < q < 8.
         """
-        m = UnitCubeMesh(10, 10, 10)
+        m = UnitSquareMesh(10, 10)
         V = FunctionSpace(m, 'CG', 1)
 
         self.problem = MockProblem(m, V)
 
         self.problem.density = sqrt(m_e / 3 / e**3) / 0.3
-        self.problem.T = Constant(4)
+        self.problem._update_func('T', Constant(4))
 
     def test_updates_q(self):
         """
@@ -276,79 +276,6 @@ class TestEnableFluxLimiting(TestCase):
 
         self.assertAlmostEqual(q_1(0.0), -8.0)
         self.assertAlmostEqual(q_2(0.0), -8.0)
-
-
-class TestMin(TestCase):
-    """
-    Tests for the _min method.
-    """
-
-    def setUp(self):
-        """
-        Create a problem.
-        """
-        m = UnitCubeMesh(10, 10, 10)
-        V = FunctionSpace(m, 'CG', 1)
-
-        self.problem = MockProblem(m, V)
-
-    def test_a_lt_b(self):
-        """
-        Test returns a if a < b.
-        """
-        val = self.problem._min(1.0, 3.6)
-        self.assertAlmostEqual(val, 1.0)
-
-    def test_a_eq_b(self):
-        """
-        Test returns a if a == b.
-        """
-        val = self.problem._min(1.5, 1.5)
-        self.assertAlmostEqual(val, 1.5)
-
-    def test_a_gt_b(self):
-        """
-        Test returns b if a > b.
-        """
-        val = self.problem._min(1.9, 0.1)
-        self.assertAlmostEqual(val, 0.1)
-
-
-class TestMax(TestCase):
-    """
-    Tests for the _max method.
-    """
-
-    def setUp(self):
-        """
-        Create a problem.
-        """
-        m = UnitCubeMesh(10, 10, 10)
-        V = FunctionSpace(m, 'CG', 1)
-
-        self.problem = MockProblem(m, V)
-
-    def test_a_lt_b(self):
-        """
-        Test returns b if a < b.
-        """
-        val = self.problem._max(1.0, 3.6)
-        self.assertAlmostEqual(val, 3.6)
-
-    def test_a_eq_b(self):
-        """
-        Test returns a if a == b.
-        """
-        val = self.problem._max(1.5, 1.5)
-        self.assertAlmostEqual(val, 1.5)
-
-    def test_a_gt_b(self):
-        """
-        Test returns a if a > b.
-        """
-        val = self.problem._max(1.9, 0.1)
-        self.assertAlmostEqual(val, 1.9)
-
 
 # =============================================================================
 # ========== ITERATION METHOD CLASS TESTS =====================================

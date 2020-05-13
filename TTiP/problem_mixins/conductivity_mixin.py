@@ -47,6 +47,9 @@ class SpitzerHarmMixin:
         K = self._K()
         self._update_func('K', K)
 
+        K_min = self.K_min()
+        self.bound('K', lower=K_min)
+
     def _K(self):
         """
         Create the function that defines the conductivity.
@@ -56,6 +59,13 @@ class SpitzerHarmMixin:
         """
         tmp = 288 * pi * sqrt(2) * epsilon_0**2 / sqrt(e * m_e)
         tmp = tmp * pow(self.T, 5 / 2) / (self.coulomb_ln * self.Z)
+
+        return tmp
+
+    def _K_min(self):
+        r = (3 / (4 * pi * self.density))**(1 / 3)
+        tau = r / self.v_th
+        tmp = 48 * self.Z * self.density * e**2 * self.T * tau / sqrt(pi) / m_e
 
         return tmp
 

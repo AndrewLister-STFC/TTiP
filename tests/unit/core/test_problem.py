@@ -3,14 +3,14 @@ Test the problem.py file.
 
 No tests for init, _A, _f as these just declare something.
 """
-import unittest
+from unittest import TestCase
 
 from firedrake import Function, FunctionSpace, UnitCubeMesh, dx
 from TTiP.core import problem
 
 
 # pylint: disable=protected-access
-class TestUpdateFunc(unittest.TestCase):
+class TestUpdateFunc(TestCase):
     """
     Test that _update_func substitues correctly.
     """
@@ -71,8 +71,80 @@ class TestUpdateFunc(unittest.TestCase):
         self.assertEqual(self.prob.P, new_P, 'P is not correct')
 
 
+class TestMin(TestCase):
+    """
+    Tests for the _min method.
+    """
+
+    def setUp(self):
+        """
+        Create a problem.
+        """
+        m = UnitCubeMesh(10, 10, 10)
+        V = FunctionSpace(m, 'CG', 1)
+
+        self.problem = problem.Problem(m, V)
+
+    def test_a_lt_b(self):
+        """
+        Test returns a if a < b.
+        """
+        val = self.problem._min(1.0, 3.6)
+        self.assertAlmostEqual(val, 1.0)
+
+    def test_a_eq_b(self):
+        """
+        Test returns a if a == b.
+        """
+        val = self.problem._min(1.5, 1.5)
+        self.assertAlmostEqual(val, 1.5)
+
+    def test_a_gt_b(self):
+        """
+        Test returns b if a > b.
+        """
+        val = self.problem._min(1.9, 0.1)
+        self.assertAlmostEqual(val, 0.1)
+
+
+class TestMax(TestCase):
+    """
+    Tests for the _max method.
+    """
+
+    def setUp(self):
+        """
+        Create a problem.
+        """
+        m = UnitCubeMesh(10, 10, 10)
+        V = FunctionSpace(m, 'CG', 1)
+
+        self.problem = problem.Problem(m, V)
+
+    def test_a_lt_b(self):
+        """
+        Test returns b if a < b.
+        """
+        val = self.problem._max(1.0, 3.6)
+        self.assertAlmostEqual(val, 3.6)
+
+    def test_a_eq_b(self):
+        """
+        Test returns a if a == b.
+        """
+        val = self.problem._max(1.5, 1.5)
+        self.assertAlmostEqual(val, 1.5)
+
+    def test_a_gt_b(self):
+        """
+        Test returns a if a > b.
+        """
+        val = self.problem._max(1.9, 0.1)
+        self.assertAlmostEqual(val, 1.9)
+
+
 # pylint: disable=no-self-use
-class TestSteadyStateProblem(unittest.TestCase):
+class TestSteadyStateProblem(TestCase):
     """
     Simple tests for the SteadyStateProblem class.
     """
@@ -87,7 +159,7 @@ class TestSteadyStateProblem(unittest.TestCase):
         _ = problem.SteadyStateProblem(m, V)
 
 
-class TestTimeDependantProblem(unittest.TestCase):
+class TestTimeDependantProblem(TestCase):
     """
     Simple tests for the TimeDependantProblem class.
     """
