@@ -20,10 +20,12 @@ class BoundaryMixin:
             The mesh that the problem is defined for.
         V (firedrake.FunctionSpace):
             A function space on which functions will be defined.
-        T (firedrake.Function):
-            The trial function for the problem.
         v (firedrake.Function):
             The test function for the problem.
+
+    Attributes:
+        T (firedrake.Function):
+            The trial function for the problem.
         q (firedrake.Function):
             A function holding the heat flux.
         a (firedrake.Function):
@@ -31,24 +33,13 @@ class BoundaryMixin:
             and v.
         L (firedrake.Function):
             The section containing the combination of terms not in a.
-
-    Attributes:
         bcs (list<firedrake.DirichletBC>):
             A list of any dirichlet contitions that are defined.
             These can't be worked into the variational problem directly.
         _has_boundary (bool);
             Flag that is set to true when a boundary has been set.
-"""
-
-    # Variables that must be present for the mixin.
-    # These will be replaced by the init in te class this is mixed into.
-    mesh = None
-    V = None
-    T = None
-    v = None
-    q = None
-    a = None
-    L = None
+    """
+    # pylint: disable=no-member
 
     def __init__(self, *args, **kwargs):
         """
@@ -59,6 +50,11 @@ class BoundaryMixin:
         Also creates empty bcs list.
         """
         super().__init__(*args, **kwargs)
+
+        self._add_function('T')
+        self._add_function('q')
+        self._add_function('a')
+        self._add_function('L')
 
         self.bcs = []
         self._has_boundary = None

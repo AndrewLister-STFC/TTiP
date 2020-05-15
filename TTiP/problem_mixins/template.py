@@ -11,16 +11,10 @@ class <name>:
        class NewProblem(<name>, Problem):
            pass
 
-    Required Attributes (for mixin):
-        <required attributes>
-
     Attributes:
         <defined attributes>
     """
-
-    # Variables that must be present for the mixin.
-    # These will be replaced by the init in te class this is mixed into.
-    <required attributes>
+    # pylint: disable=no-member
 
     def __init__(self, *args, **kwargs):
         """

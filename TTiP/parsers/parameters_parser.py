@@ -31,9 +31,9 @@ class ParametersParser(FunctionSectionParser):
                 The function space that the functions should belong to.
         """
         super().__init__(mesh, V)
-        self.density = Constant(1.1e27)
-        self.coulomb_ln = Constant(10)
-        self.Z = Constant(12)
+        self.parameters = {'electron_density': Constant(5.0e28),
+                           'coulomb_ln': Constant(10),
+                           'Z': Constant(12)}
 
     def parse(self, conf):
         """
@@ -44,6 +44,4 @@ class ParametersParser(FunctionSectionParser):
                 The full PARAMETERS section from the config.
         """
         all_functions = self.factory.create_function_dict(conf)
-        for k in ['density', 'Z', 'coulomb_ln']:
-            if k in all_functions:
-                setattr(self, k, all_functions[k.lower()])
+        self.parameters.update(all_functions)

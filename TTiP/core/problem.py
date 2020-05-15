@@ -8,7 +8,9 @@ from ufl import Form, Integral
 from ufl.core.expr import Expr
 
 from TTiP.problem_mixins.boundaries_mixin import BoundaryMixin
-from TTiP.problem_mixins.conductivity_mixin import SpitzerHarmMixin
+from TTiP.problem_mixins.conductivity_mixin import (ConductivityLimiterMixin,
+                                                    SpitzerHarmMixin)
+from TTiP.problem_mixins.flux_limit_mixin import FluxLimiterMixin
 from TTiP.problem_mixins.time_mixin import TimeMixin
 
 
@@ -36,14 +38,14 @@ class Problem:
         q (firedrake.Function):
             A function to hold the heat flux (K*grad(T)).
         v_th (firedrake.Function):
-            A function to hold v_th.
+            A function to hold v_th (thermal velocity?).
         a (firedrake.Function):
             A function used to combine parts including T and v.
             Used to solve the problem of finding a - L = 0.
         L (firedrake.Function):
             A function used to combine parts not in 'a' (see above).
     """
-    # pylint: disable=too-few-public-methods
+    # pylint: disable=too-few-public-methods, no-member
 
     def __init__(self, mesh, V):
         """
@@ -56,16 +58,22 @@ class Problem:
             V (firedrake.FunctionSpace):
                 The function space to define the solution on.
         """
+        self._functions = []
+
         # Store the function space details.
         self.mesh = mesh
         self.V = V
 
         # Initialise functions for problem.
         self.v = TestFunction(V)
-        self.T = Function(V, name='T')
-        self.S = Function(V, name='S')
 
-        self.K = Function(V, name='K')
+        self._add_function('T')
+        self._add_function('S')
+        self._add_function('K')
+        self._add_function('q')
+        self._add_function('v_th')
+        self._add_function('a')
+        self._add_function('L')
 
         self.q = self.K * grad(self.T)
         self.v_th = sqrt(3 * e * self.T / m_e)
@@ -73,15 +81,19 @@ class Problem:
         self.a = self._A()
         self.L = self._f()
 
-    def set_S(self, S):
+    def set_function(self, name, value):
         """
-        Replace S in all formulas (namely L).
+        Replace named function in all formulas.
 
         Args:
-            S (Function):
-                The new value for S.
+            name (str):
+                The name of the function to replace.
+            value (Function):
+                The value to replace the named function with.
         """
-        self._update_func('S', S)
+        if name not in self._functions:
+            raise AttributeError('Could not set "{}"'.format(name))
+        self._update_func(name, value)
 
     def _A(self):
         """
@@ -122,10 +134,32 @@ class Problem:
                 updated_val = replace(attr_val, {old_val: val})
                 setattr(self, attr_name, updated_val)
 
+    def _add_function(self, name):
+        """
+        Ensure the problem has required attribute.
+        If attribute already exists, do nothing.
+        Otherwise create a new function to hold it and add a setter method.
+
+        Args:
+            name (str): The name of the attribute to create.
+        """
+        if name in self._functions:
+            return
+
+        if hasattr(self, name):
+            raise AttributeError('"{}" already exists and is not a function.'
+                                 ''.format(name))
+
+        f = Function(self.V, name=name)
+        setattr(self, name, f)
+
+        self._functions.append(name)
+
     def bound(self, name, lower=None, upper=None):
         """
         Impose bounds on a function.
-        This replaces a function with a bounded version.
+        This replaces a function with a bounded version in all formulas.
+        Note: This does not change the variable itself.
 
         For multi-dimensional functions this will apply bounds elementwise.
 
@@ -144,6 +178,7 @@ class Problem:
             return
 
         val = getattr(self, name)
+        unbounded = val
 
         if lower is not None:
             if val.ufl_shape:
@@ -158,6 +193,7 @@ class Problem:
                 val = self._min(val, upper)
 
         self._update_func(name, val)
+        setattr(self, name, unbounded)
 
     def _min(self, a, b):
         """
@@ -186,16 +222,60 @@ class Problem:
         return 0.5 * (a + b + abs(a - b))
 
 
-class SteadyStateProblem(SpitzerHarmMixin, BoundaryMixin, Problem):
+class SteadyStateProblem(SpitzerHarmMixin, BoundaryMixin,
+                         Problem):
     """
     A steady state problem with no time dependance.
     This solves the problem where dT/dt=0.
     """
 
 
-class TimeDependantProblem(SpitzerHarmMixin, TimeMixin, BoundaryMixin,
-                           Problem):
+class TimeDependantProblem(FluxLimiterMixin, SpitzerHarmMixin, TimeMixin,
+                           BoundaryMixin, Problem):
     """
     A full time dependant problem.
     This includes all terms.
     """
+
+
+def create_problem_class(time_dep=False, sh_conductivity=True,
+                         limit_flux=True, limit_conductivity=True):
+    """
+    Create a problem class using a subset of available functionality.
+
+    Args:
+        time_dep (bool, optional):
+            Whether the problem will have time dependency.
+            Defaults to False.
+        sh_conductivity (bool, optional):
+            Whether to use spitzer harm conductivity for the problem.
+            Defaults to True.
+        limit_flux (bool, optional):
+            Whether to enable flux limiting on the problem.
+            Defaults to True.
+        limit_conductivity (bool, optional):
+            Whether to impose a lower physical bound on the conductivity.
+            Defaults to True.
+
+    Returns:
+        class: A problem class with the required functionality.
+    """
+
+    dependancies = [BoundaryMixin, Problem]
+
+    if time_dep:
+        dependancies.insert(0, TimeMixin)
+    if sh_conductivity:
+        dependancies.insert(0, SpitzerHarmMixin)
+    if limit_flux:
+        dependancies.insert(0, FluxLimiterMixin)
+    if limit_conductivity:
+        dependancies.insert(0, ConductivityLimiterMixin)
+
+    class CustomProblem(*dependancies):
+        """
+        A custom problem class using the following mixins:
+        - {}
+        """.format('\n- '.join([d.__name__ for d in dependancies]))
+
+    return CustomProblem

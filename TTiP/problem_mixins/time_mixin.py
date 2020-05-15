@@ -20,9 +20,7 @@ class TimeMixin:
        class NewProblem(TimeMixin, Problem):
            pass
 
-    Required Attributes (for mixin):
-        V (firedrake.FunctionSpace):
-            A function space on which functions will be defined.
+    Attributes:
         T (firedrake.Function):
             The trial function for the problem.
         v (firedrake.Function):
@@ -30,18 +28,14 @@ class TimeMixin:
         a (firedrake.Function):
             The section containing the combination of terms involving both T
             and v.
-        q (Function):
-            The heat flux.
-        v_th (firedrake.Function):
-            The value of v_th.
-
-    Attributes:
+        electron_density (firedrake.Function):
+            The electron density of the plasma.
         T_ (firedrake.Function):
             A function used to hold the previous value for T.
-        delT (firedrake.Function):
-            A function used as a placeholder for the time derivative.
         C (firedrake.Function):
             A function used to hold the heat capacity of the mesh.
+        _delT (firedrake.Function):
+            A function used as a placeholder for the time derivative.
         max_t (float):
             The time to iterate up to.
         dt (float):
@@ -53,19 +47,8 @@ class TimeMixin:
         steady_state (bool):
             Toggle whether solving steady state (dT/dt = 0) or time dependent
             problem.
-        density (firedrake.Function):
-            The density of the plasma.
     """
-    # pylint: disable=too-many-instance-attributes
-
-    # Variables that must be present for the mixin.
-    # These will be replaced by the init in te class this is mixed into.
-    V = None
-    T = None
-    v = None
-    a = None
-    q = None
-    v_th = None
+    # pylint: disable=too-many-instance-attributes, no-member
 
     def __init__(self, *args, **kwargs):
         """
@@ -75,12 +58,13 @@ class TimeMixin:
         """
         super().__init__(*args, **kwargs)
 
-        self.T_ = Function(self.V, name='T_')
-        self._delT = Function(self.V, name='delT')
+        self._add_function('T')
+        self._add_function('a')
+        self._add_function('electron_density')
 
-        self.density = Function(self.V, name='density')
-
-        self.C = 1.5 * self.density * e
+        self._add_function('T_')
+        self._add_function('C')
+        self._add_function('_delT')
 
         self.max_t = 1e-9
         self.dt = 1e-10
@@ -89,6 +73,7 @@ class TimeMixin:
 
         self.steady_state = True
 
+        self.C = self._C()
         self.a += self._M()
 
     def set_method(self, method='BackwardEuler', **kwargs):
@@ -172,16 +157,6 @@ class TimeMixin:
         self.steps = steps
         self.steady_state = False
 
-    def set_density(self, density):
-        """
-        Update density in all formulas (namely a).
-
-        Args:
-            density (Function):
-                The density for the problem.
-        """
-        self._update_func('density', density)
-
     def _M(self):
         """
         Create the mass matrix section.
@@ -191,20 +166,14 @@ class TimeMixin:
         """
         return self.C * self._delT * self.v * dx
 
-    def enable_flux_limiting(self):
-        r"""
-        Add flux limiting to ensure temperature is bound by physical
-        constraints.
-
-        This replaces the existing flux with the minimum of the flux and a
-        physical limit:
-
-        .. math::
-
-           n_e e T_e \sqrt{\frac{3 e T_e}{m_e}}
+    def _C(self):
         """
-        q_fs = self.density * e * self.T * self.v_th
-        self.bound('q', lower=-0.3 * q_fs, upper=0.3 * q_fs)
+        Create the specific heat capacity.
+
+        Returns:
+            Function: The specific heat capacity.
+        """
+        return 1.5 * self.electron_density * e
 
 
 class IterationMethod:

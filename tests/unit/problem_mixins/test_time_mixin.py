@@ -11,7 +11,7 @@ from TTiP.core.problem import Problem
 from TTiP.problem_mixins.time_mixin import IterationMethod, TimeMixin
 
 
-# pylint: disable=attribute-defined-outside-init, protected-access
+# pylint: disable=attribute-defined-outside-init, protected-access, no-member
 class MockProblem(TimeMixin, Problem):
     """
     A dummy class to allow instantiating the mixin.
@@ -198,84 +198,6 @@ class TestSetTimescale(TestCase):
         with self.assertRaises(ValueError):
             self.problem.set_timescale(max_t=4.0, dt=0.1, steps=53)
 
-
-class TestEnableFluxLimiting(TestCase):
-    """
-    Tests for the enable_flux_limiting method.
-    """
-
-    def setUp(self):
-        """
-        Create a problem.
-        Set density and T so that bound is -8 < q < 8.
-        """
-        m = UnitSquareMesh(10, 10)
-        V = FunctionSpace(m, 'CG', 1)
-
-        self.problem = MockProblem(m, V)
-
-        self.problem.density = sqrt(m_e / 3 / e**3) / 0.3
-        self.problem._update_func('T', Constant(4))
-
-    def test_updates_q(self):
-        """
-        Test that q is updated.
-        """
-        q = self.problem.q
-        self.problem.enable_flux_limiting()
-        self.assertNotEqual(q, self.problem.q)
-
-    def test_bounded_q_both_upper(self):
-        """
-        Test when q is above the bound for 2D in both directions.
-        """
-        self.problem.q = as_tensor([Constant(12.9), Constant(8.2)])
-
-        self.problem.enable_flux_limiting()
-
-        q_1, q_2 = self.problem.q
-
-        self.assertAlmostEqual(q_1(0.0), 8.0)
-        self.assertAlmostEqual(q_2(0.0), 8.0)
-
-    def test_bounded_q_single_upper(self):
-        """
-        Test when q is above the bound for 2D in one direction.
-        """
-        self.problem.q = as_tensor([Constant(12.9), Constant(7.2)])
-
-        self.problem.enable_flux_limiting()
-
-        q_1, q_2 = self.problem.q
-
-        self.assertAlmostEqual(q_1(0.0), 8.0)
-        self.assertAlmostEqual(q_2(0.0), 7.2)
-
-    def test_bounded_q_both_inside(self):
-        """
-        Test when q is inside the bound for 2D in both directions.
-        """
-        self.problem.q = as_tensor([Constant(1.9), Constant(7.2)])
-
-        self.problem.enable_flux_limiting()
-
-        q_1, q_2 = self.problem.q
-
-        self.assertAlmostEqual(q_1(0.0), 1.9)
-        self.assertAlmostEqual(q_2(0.0), 7.2)
-
-    def test_bounded_q_lower(self):
-        """
-        Test when q is below the bound for 2D in both directions.
-        """
-        self.problem.q = as_tensor([Constant(-19.9), Constant(-27.2)])
-
-        self.problem.enable_flux_limiting()
-
-        q_1, q_2 = self.problem.q
-
-        self.assertAlmostEqual(q_1(0.0), -8.0)
-        self.assertAlmostEqual(q_2(0.0), -8.0)
 
 # =============================================================================
 # ========== ITERATION METHOD CLASS TESTS =====================================

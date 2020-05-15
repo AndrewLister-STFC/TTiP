@@ -14,25 +14,17 @@ class SpitzerHarmMixin:
        class NewProblem(SpitzerHarmMixin, Problem):
            pass
 
-    Required Attributes (for mixin):
-        V (FunctionSpace):
-            The function space that functions must be defined on.
+    Attributes:
         T (Function):
             The trial function to solve for.
         K (Function):
             The conductivity (will be updated by this mixin)
-
-    Attributes:
         coulomb_ln (Function):
             The coulomb logarithm for the problem.
         Z (Function):
             The ionisation term for the problem.
     """
-    # pylint: disable=too-few-public-methods
-
-    # Variables that must be present for the mixin.
-    # These will be replaced by the init in te class this is mixed into.
-    T = None
+    # pylint: disable=too-few-public-methods, no-member
 
     def __init__(self, *args, **kwargs):
         """
@@ -42,13 +34,12 @@ class SpitzerHarmMixin:
         """
         super().__init__(*args, **kwargs)
 
-        self.coulomb_ln = Function(self.V)
-        self.Z = Function(self.V)
-        K = self._K()
-        self._update_func('K', K)
+        self._add_function('T')
+        self._add_function('K')
+        self._add_function('coulomb_ln')
+        self._add_function('Z')
 
-        K_min = self.K_min()
-        self.bound('K', lower=K_min)
+        self.set_function('K', self._K())
 
     def _K(self):
         """
@@ -62,27 +53,51 @@ class SpitzerHarmMixin:
 
         return tmp
 
+
+class ConductivityLimiterMixin:
+    """
+    Class to extend Problems as a mixin.
+    This mixin extends the problem to place a lower limit on the conductivity.
+    To use, define a new class with this in the inheritance chain.
+    i.e::
+       class NewProblem(ConductivityLimiterMixin, Problem):
+           pass
+
+    Attributes:
+        T (Function):
+            The electron temperature in the plasma.
+        ion_density (Function):
+            The density of ions in the plasma.
+        Z (Function):
+            The ionization term.
+        v_th (Function):
+            The value of v_th (thermal velocity?)
+        K (Function):
+            The conductivity of the plasma.
+    """
+    # pylint: disable=too-few-public-methods, no-member
+
+    def __init__(self, *args, **kwargs):
+        """
+        Initialiser for ConductivityLimiterMixin.
+
+        Inserts a lower bound on the conductivity.
+        """
+        super().__init__(*args, **kwargs)
+
+        self._add_function('T')
+        self._add_function('ion_density')
+        self._add_function('Z')
+        self._add_function('v_th')
+        self._add_function('K')
+
+        K_min = self._K_min()
+        self.bound('K', lower=K_min)
+
     def _K_min(self):
-        r = (3 / (4 * pi * self.density))**(1 / 3)
-        tau = r / self.v_th
-        tmp = 48 * self.Z * self.density * e**2 * self.T * tau / sqrt(pi) / m_e
+        r_ii = (3 / (4 * pi * self.ion_density))**(1 / 3)
+        tau_min = r_ii / self.v_th
+        tmp = 48 * self.Z * self.ion_density * e**2 * self.T * tau_min
+        tmp = tmp / sqrt(pi) / m_e
 
         return tmp
-
-    def set_coulomb_ln(self, coulomb_ln):
-        """
-        Set the coulomb logarithm in K (and propagate).
-
-        Args:
-            coulomb_ln (Function): The function to replace coulomn_ln with.
-        """
-        self._update_func('coulomb_ln', coulomb_ln)
-
-    def set_Z(self, Z):
-        """
-        Set the ionization energy in K (and propagate).
-
-        Args:
-            Z (Function): The function to replace Z with.
-        """
-        self._update_func('Z', Z)
