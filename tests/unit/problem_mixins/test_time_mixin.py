@@ -3,9 +3,8 @@ Tests for the time_mixin.py file.
 """
 from unittest import TestCase
 
-from firedrake import Constant, FunctionSpace, UnitCubeMesh, UnitSquareMesh, as_tensor, sqrt
+from firedrake import FunctionSpace, UnitCubeMesh
 from mock import patch
-from scipy.constants import m_e, e
 
 from TTiP.core.problem import Problem
 from TTiP.problem_mixins.time_mixin import IterationMethod, TimeMixin

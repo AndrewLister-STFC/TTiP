@@ -1,7 +1,7 @@
 """
 Contains the conductivity classes for extending problems.
 """
-from firedrake import Function, sqrt
+from firedrake import sqrt
 from scipy.constants import e, epsilon_0, m_e, pi
 
 

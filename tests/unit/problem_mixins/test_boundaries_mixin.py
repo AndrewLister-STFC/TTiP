@@ -11,7 +11,7 @@ from TTiP.core.problem import Problem
 from TTiP.problem_mixins.boundaries_mixin import BoundaryMixin
 
 
-# pylint: disable=protected-access
+# pylint: disable=protected-access, no-member
 class MockProblem(BoundaryMixin, Problem):
     """
     Fake problem for testing the boundary mixin.
