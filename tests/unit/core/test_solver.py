@@ -14,10 +14,12 @@ from TTiP.core.solver import Solver
 
 SimpleSteadyState = create_problem_class(time_dep=False,
                                          sh_conductivity=False,
-                                         limit_flux=False)
+                                         limit_flux=False,
+                                         limit_conductivity=False)
 SimpleTimeDep = create_problem_class(time_dep=True,
                                      sh_conductivity=False,
-                                     limit_flux=False)
+                                     limit_flux=False,
+                                     limit_conductivity=False)
 
 
 # pylint: disable=protected-access
