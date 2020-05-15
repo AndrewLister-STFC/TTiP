@@ -5,7 +5,10 @@ No tests for init, _A, _f as these just declare something.
 """
 from unittest import TestCase
 
-from firedrake import Function, FunctionSpace, UnitCubeMesh, dx
+from firedrake import (Function, FunctionSpace, SpatialCoordinate,
+                       UnitCubeMesh, as_tensor, dx)
+import numpy as np
+
 from TTiP.core import problem
 
 
@@ -23,6 +26,13 @@ class TestUpdateFunc(TestCase):
         self.V = FunctionSpace(self.mesh, 'CG', 1)
 
         self.prob = problem.Problem(mesh=self.mesh, V=self.V)
+
+    def test_update_non_existant_var(self):
+        """
+        Test that an error is raised for a non-existing variable.
+        """
+        with self.assertRaises(AttributeError):
+            self.prob._update_func('fake_func', None)
 
     def test_update_single_attr(self):
         """
@@ -69,6 +79,185 @@ class TestUpdateFunc(TestCase):
         # Change P
         self.assertNotEqual(self.prob.P, old_P, 'New P is equal to old P')
         self.assertEqual(self.prob.P, new_P, 'P is not correct')
+
+
+class TestAddFunction(TestCase):
+    """
+    Tests for the _add_function method.
+    """
+
+    def setUp(self):
+        """
+        Create a blank problem.
+        """
+        self.mesh = UnitCubeMesh(10, 10, 10)
+        self.V = FunctionSpace(self.mesh, 'CG', 1)
+
+        self.prob = problem.Problem(mesh=self.mesh, V=self.V)
+
+    def test_creates_attribute(self):
+        """
+        Test that the function creates an attribute if none exists.
+        """
+        self.assertFalse(hasattr(self.prob, 'foo'))
+        self.prob._add_function('foo')
+        self.assertTrue(hasattr(self.prob, 'foo'))
+
+    def test_existing_attribute(self):
+        """
+        Test that it does not change an existing function if call is repeated.
+        """
+        self.prob._add_function('foo')
+        foo = self.prob.foo
+        self.prob._add_function('foo')
+        self.assertIs(foo, self.prob.foo)
+
+    def test_existing_non_function_attribute(self):
+        """
+        Test that an exception is raised if the name exists and is not a
+        function.
+        """
+        self.prob.foo = 'bar'
+        with self.assertRaises(AttributeError):
+            self.prob._add_function('foo')
+
+
+class TestBound(TestCase):
+    """
+    Tests for the bound method.
+    """
+
+    def setUp(self):
+        """
+        Create a problem and function to set bounds on.
+        """
+        self.mesh = UnitCubeMesh(10, 10, 10)
+        self.V = FunctionSpace(self.mesh, 'CG', 1)
+
+        self.prob = problem.Problem(mesh=self.mesh, V=self.V)
+
+        self.prob.to_bound = Function(self.V)
+        self.prob.test_func = self.prob.to_bound + 1
+
+    def test_set_no_bound(self):
+        """
+        Test that passing no bounds results in no change
+        """
+        to_bound = self.prob.to_bound
+        test_func = self.prob.test_func
+        self.prob.bound('to_bound')
+        self.assertIs(to_bound, self.prob.to_bound)
+        self.assertIs(test_func, self.prob.test_func)
+
+    def test_lower_bound_scalar(self):
+        """
+        Test that setting lower bounds work as expected for normal functions.
+        """
+        x = SpatialCoordinate(self.mesh)
+        self.prob.to_bound.interpolate(x[0])
+
+        self.assertAlmostEqual(self.prob.test_func([0.1, 0.1, 0.1]), 1.1)
+        self.assertAlmostEqual(self.prob.test_func([0.6, 0.1, 0.1]), 1.6)
+        self.prob.bound('to_bound', lower=0.2)
+        self.assertAlmostEqual(self.prob.test_func([0.1, 0.1, 0.1]), 1.2)
+        self.assertAlmostEqual(self.prob.test_func([0.6, 0.1, 0.1]), 1.6)
+
+    def test_upper_bound_scalar(self):
+        """
+        Test that setting upper bounds work as expected for normal functions.
+        """
+        x = SpatialCoordinate(self.mesh)
+        self.prob.to_bound.interpolate(x[0])
+
+        self.assertAlmostEqual(self.prob.test_func([0.1, 0.1, 0.1]), 1.1)
+        self.assertAlmostEqual(self.prob.test_func([0.6, 0.1, 0.1]), 1.6)
+        self.prob.bound('to_bound', upper=0.2)
+        self.assertAlmostEqual(self.prob.test_func([0.1, 0.1, 0.1]), 1.1)
+        self.assertAlmostEqual(self.prob.test_func([0.6, 0.1, 0.1]), 1.2)
+
+    def test_upper_and_lower_bound_scalar(self):
+        """
+        Test that setting lower and upper bounds work as expected for normal
+        functions.
+        """
+        x = SpatialCoordinate(self.mesh)
+        self.prob.to_bound.interpolate(x[0])
+
+        self.assertAlmostEqual(self.prob.test_func([0.1, 0.1, 0.1]), 1.1)
+        self.assertAlmostEqual(self.prob.test_func([0.6, 0.1, 0.1]), 1.6)
+        self.prob.bound('to_bound', lower=0.2, upper=0.5)
+        self.assertAlmostEqual(self.prob.test_func([0.1, 0.1, 0.1]), 1.2)
+        self.assertAlmostEqual(self.prob.test_func([0.6, 0.1, 0.1]), 1.5)
+
+    def test_lower_bound_vector(self):
+        """
+        Test that setting lower bounds work as expected for vector functions.
+        """
+        x = SpatialCoordinate(self.mesh)
+        self.prob.to_bound = as_tensor([Function(self.V).interpolate(x[0]),
+                                        Function(self.V).interpolate(1-x[0])])
+        self.prob.test_func = self.prob.to_bound + as_tensor([1, 1])
+
+        self.assertAlmostEqual(self.prob.test_func[0]([0.1, 0.1, 0.1]), 1.1)
+        self.assertAlmostEqual(self.prob.test_func[1]([0.1, 0.1, 0.1]), 1.9)
+
+        self.assertAlmostEqual(self.prob.test_func[0]([0.6, 0.1, 0.1]), 1.6)
+        self.assertAlmostEqual(self.prob.test_func[1]([0.6, 0.1, 0.1]), 1.4)
+
+        self.prob.bound('to_bound', lower=0.5)
+
+        self.assertAlmostEqual(self.prob.test_func[0]([0.1, 0.1, 0.1]), 1.5)
+        self.assertAlmostEqual(self.prob.test_func[1]([0.1, 0.1, 0.1]), 1.9)
+
+        self.assertAlmostEqual(self.prob.test_func[0]([0.6, 0.1, 0.1]), 1.6)
+        self.assertAlmostEqual(self.prob.test_func[1]([0.6, 0.1, 0.1]), 1.5)
+
+    def test_upper_bound_vector(self):
+        """
+        Test that setting upper bounds work as expected for vector functions.
+        """
+        x = SpatialCoordinate(self.mesh)
+        self.prob.to_bound = as_tensor([Function(self.V).interpolate(x[0]),
+                                        Function(self.V).interpolate(1-x[0])])
+        self.prob.test_func = self.prob.to_bound + as_tensor([1, 1])
+
+        self.assertAlmostEqual(self.prob.test_func[0]([0.1, 0.1, 0.1]), 1.1)
+        self.assertAlmostEqual(self.prob.test_func[1]([0.1, 0.1, 0.1]), 1.9)
+
+        self.assertAlmostEqual(self.prob.test_func[0]([0.6, 0.1, 0.1]), 1.6)
+        self.assertAlmostEqual(self.prob.test_func[1]([0.6, 0.1, 0.1]), 1.4)
+
+        self.prob.bound('to_bound', upper=0.5)
+
+        self.assertAlmostEqual(self.prob.test_func[0]([0.1, 0.1, 0.1]), 1.1)
+        self.assertAlmostEqual(self.prob.test_func[1]([0.1, 0.1, 0.1]), 1.5)
+
+        self.assertAlmostEqual(self.prob.test_func[0]([0.6, 0.1, 0.1]), 1.5)
+        self.assertAlmostEqual(self.prob.test_func[1]([0.6, 0.1, 0.1]), 1.4)
+
+    def test_upper_and_lower_bound_vector(self):
+        """
+        Test that setting lower and upper bounds work as expected for vector
+        functions.
+        """
+        x = SpatialCoordinate(self.mesh)
+        self.prob.to_bound = as_tensor([Function(self.V).interpolate(x[0]),
+                                        Function(self.V).interpolate(1-x[0])])
+        self.prob.test_func = self.prob.to_bound + as_tensor([1, 1])
+
+        self.assertAlmostEqual(self.prob.test_func[0]([0.1, 0.1, 0.1]), 1.1)
+        self.assertAlmostEqual(self.prob.test_func[1]([0.1, 0.1, 0.1]), 1.9)
+
+        self.assertAlmostEqual(self.prob.test_func[0]([0.6, 0.1, 0.1]), 1.6)
+        self.assertAlmostEqual(self.prob.test_func[1]([0.6, 0.1, 0.1]), 1.4)
+
+        self.prob.bound('to_bound', lower=0.45, upper=0.55)
+
+        self.assertAlmostEqual(self.prob.test_func[0]([0.1, 0.1, 0.1]), 1.45)
+        self.assertAlmostEqual(self.prob.test_func[1]([0.1, 0.1, 0.1]), 1.55)
+
+        self.assertAlmostEqual(self.prob.test_func[0]([0.6, 0.1, 0.1]), 1.55)
+        self.assertAlmostEqual(self.prob.test_func[1]([0.6, 0.1, 0.1]), 1.45)
 
 
 class TestMin(TestCase):
