@@ -7,9 +7,13 @@ from unittest import TestCase
 
 from firedrake import (Function, FunctionSpace, SpatialCoordinate,
                        UnitCubeMesh, as_tensor, dx)
-import numpy as np
 
 from TTiP.core import problem
+from TTiP.problem_mixins.boundaries_mixin import BoundaryMixin
+from TTiP.problem_mixins.conductivity_mixin import (ConductivityLimiterMixin,
+                                                    SpitzerHarmMixin)
+from TTiP.problem_mixins.flux_limit_mixin import FluxLimiterMixin
+from TTiP.problem_mixins.time_mixin import TimeMixin
 
 
 # pylint: disable=protected-access
@@ -361,3 +365,94 @@ class TestTimeDependantProblem(TestCase):
         V = FunctionSpace(m, 'CG', 1)
 
         _ = problem.TimeDependantProblem(m, V)
+
+
+class TestCreateProblemClass(TestCase):
+    """
+    Tests for thecreate_problem_class_method.
+    """
+
+    def test_is_problem(self):
+        """
+        Test that the returned class is a subclass of Problem.
+        """
+        klass = problem.create_problem_class()
+        self.assertTrue(issubclass(klass, problem.Problem))
+        self.assertTrue(issubclass(klass, BoundaryMixin))
+
+    def test_time_dep_false(self):
+        """
+        Test that the problem does not inherit from TimeMixin if time_dep is
+        false.
+        """
+        klass = problem.create_problem_class(time_dep=False)
+        self.assertFalse(issubclass(klass, TimeMixin))
+
+    def test_time_dep_true(self):
+        """
+        Test that the problem does inherit from TimeMixin if time_dep is
+        true.
+        """
+        klass = problem.create_problem_class(time_dep=True)
+        self.assertTrue(issubclass(klass, TimeMixin))
+
+    def test_sh_conductivity_false(self):
+        """
+        Test that the problem does not inherit from SpitzerHarmMixin if
+        sh_conductivity is false.
+        """
+        klass = problem.create_problem_class(sh_conductivity=False)
+        self.assertFalse(issubclass(klass, SpitzerHarmMixin))
+
+    def test_sh_conductivity_true(self):
+        """
+        Test that the problem does inherit from SpitzerHarmMixin if
+        sh_conductivity is true.
+        """
+        klass = problem.create_problem_class(sh_conductivity=True)
+        self.assertTrue(issubclass(klass, SpitzerHarmMixin))
+
+    def test_limit_flux_false(self):
+        """
+        Test that the problem does not inherit from FluxLimiterMixin if
+        limit_flux is false.
+        """
+        klass = problem.create_problem_class(limit_flux=False)
+        self.assertFalse(issubclass(klass, FluxLimiterMixin))
+
+    def test_limit_flux_true(self):
+        """
+        Test that the problem does inherit from FluxLimiterMixin if
+        limit_flux is true.
+        """
+        klass = problem.create_problem_class(limit_flux=True)
+        self.assertTrue(issubclass(klass, FluxLimiterMixin))
+
+    def test_limit_conductivity_false(self):
+        """
+        Test that the problem does not inherit from ConductivityLimiterMixin
+        if limit_conductivity is false.
+        """
+        klass = problem.create_problem_class(limit_conductivity=False)
+        self.assertFalse(issubclass(klass, ConductivityLimiterMixin))
+
+    def test_limit_conductivity_true(self):
+        """
+        Test that the problem does inherit from ConductivityLimiterMixin
+        if limit_conductivity is true.
+        """
+        klass = problem.create_problem_class(limit_conductivity=True)
+        self.assertTrue(issubclass(klass, ConductivityLimiterMixin))
+
+    def test_mix(self):
+        """
+        Test that a mix of settings has all the required functionality.
+        """
+        klass = problem.create_problem_class(time_dep=True,
+                                             limit_flux=False,
+                                             limit_conductivity=True,
+                                             sh_conductivity=True)
+        self.assertTrue(issubclass(klass, TimeMixin))
+        self.assertFalse(issubclass(klass, FluxLimiterMixin))
+        self.assertTrue(issubclass(klass, ConductivityLimiterMixin))
+        self.assertTrue(issubclass(klass, SpitzerHarmMixin))
