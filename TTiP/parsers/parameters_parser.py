@@ -15,7 +15,7 @@ class ParametersParser(FunctionSectionParser):
             The value specified for density.
         coulomb_ln (Function):
             The value specified for the coulomb_ln.
-        Z (Function):
+        z (Function):
             The value specified for Z.
     """
     # pylint: disable=too-few-public-methods
@@ -33,7 +33,7 @@ class ParametersParser(FunctionSectionParser):
         super().__init__(mesh, V)
         self.parameters = {'electron_density': Constant(5.0e28),
                            'coulomb_ln': Constant(10),
-                           'Z': Constant(12)}
+                           'z': Constant(12)}
 
     def parse(self, conf):
         """

@@ -222,7 +222,10 @@ class Problem:
         return 0.5 * (a + b + abs(a - b))
 
 
-class SteadyStateProblem(SpitzerHarmMixin, BoundaryMixin,
+class SteadyStateProblem(ConductivityLimiterMixin,
+                         FluxLimiterMixin,
+                         SpitzerHarmMixin,
+                         BoundaryMixin,
                          Problem):
     """
     A steady state problem with no time dependance.
@@ -230,8 +233,12 @@ class SteadyStateProblem(SpitzerHarmMixin, BoundaryMixin,
     """
 
 
-class TimeDependantProblem(FluxLimiterMixin, SpitzerHarmMixin, TimeMixin,
-                           BoundaryMixin, Problem):
+class TimeDependantProblem(ConductivityLimiterMixin,
+                           FluxLimiterMixin,
+                           SpitzerHarmMixin,
+                           TimeMixin,
+                           BoundaryMixin,
+                           Problem):
     """
     A full time dependant problem.
     This includes all terms.

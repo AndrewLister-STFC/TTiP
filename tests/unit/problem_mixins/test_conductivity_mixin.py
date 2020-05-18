@@ -89,4 +89,4 @@ class TestCLInit(TestCase):
         """
         prob = self.cls(mesh=self.mesh, V=self.V)
         self.assertTrue(hasattr(prob, 'ion_density'))
-        self.assertTrue(hasattr(prob, 'Z'))
+        self.assertTrue(hasattr(prob, 'z'))
