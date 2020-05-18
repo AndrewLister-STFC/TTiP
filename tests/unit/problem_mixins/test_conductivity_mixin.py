@@ -11,16 +11,14 @@ from unittest import TestCase
 from firedrake import FunctionSpace, UnitCubeMesh
 
 from TTiP.core.problem import Problem
-from TTiP.problem_mixins.conductivity_mixin import SpitzerHarmMixin
+from TTiP.problem_mixins.conductivity_mixin import SpitzerHarmMixin, ConductivityLimiterMixin
 
 
-class MockProblem(SpitzerHarmMixin, Problem):
-    """
-    Fake problem to test the spitzer harm mixin.
-    """
+# =============================================================================
+# ========== SpitzerHarmMixin =================================================
+# =============================================================================
 
-
-class TestInit(TestCase):
+class TestSHInit(TestCase):
     """
     Test initialsing with this mixin.
     """
@@ -29,6 +27,14 @@ class TestInit(TestCase):
         """
         Create mesh and fnction space.
         """
+
+        class MockProblem(SpitzerHarmMixin, Problem):
+            """
+            Fake problem to test the spitzer harm mixin.
+            """
+
+        self.cls = MockProblem
+
         self.mesh = UnitCubeMesh(10, 10, 10)
         self.V = FunctionSpace(self.mesh, 'CG', 1)
 
@@ -36,12 +42,51 @@ class TestInit(TestCase):
         """
         Test that the problem can be initialised.
         """
-        MockProblem(mesh=self.mesh, V=self.V)
+        self.cls(mesh=self.mesh, V=self.V)
 
     def test_has_attributes(self):
         """
         Test that the initialised problem has the required attributes.
         """
-        prob = MockProblem(mesh=self.mesh, V=self.V)
+        prob = self.cls(mesh=self.mesh, V=self.V)
         self.assertTrue(hasattr(prob, 'coulomb_ln'))
+        self.assertTrue(hasattr(prob, 'Z'))
+
+
+# =============================================================================
+# ========== ConductivityLimiterMixin =========================================
+# =============================================================================
+
+class TestCLInit(TestCase):
+    """
+    Test initialsing with this mixin.
+    """
+
+    def setUp(self):
+        """
+        Create mesh and fnction space.
+        """
+
+        class MockProblem(ConductivityLimiterMixin, Problem):
+            """
+            Fake problem to test the spitzer harm mixin.
+            """
+
+        self.cls = MockProblem
+
+        self.mesh = UnitCubeMesh(10, 10, 10)
+        self.V = FunctionSpace(self.mesh, 'CG', 1)
+
+    def test_can_create(self):
+        """
+        Test that the problem can be initialised.
+        """
+        self.cls(mesh=self.mesh, V=self.V)
+
+    def test_has_attributes(self):
+        """
+        Test that the initialised problem has the required attributes.
+        """
+        prob = self.cls(mesh=self.mesh, V=self.V)
+        self.assertTrue(hasattr(prob, 'ion_density'))
         self.assertTrue(hasattr(prob, 'Z'))
