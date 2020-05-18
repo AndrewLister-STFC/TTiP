@@ -233,32 +233,32 @@ class TestGetParameters(unittest.TestCase):
         Test that the parameters section is correctly passed through.
         """
         def new_func(s, x):
-            s.density = x is self.conf.conf_parser['PARAMETERS']
+            s.parameters['foo'] = x is self.conf.conf_parser['PARAMETERS']
 
         with patch.object(read_config.ParametersParser, 'parse', new_func):
-            works, _, _ = self.conf.get_parameters()
-            self.assertTrue(works)
+            p = self.conf.get_parameters()
+            self.assertTrue(p['foo'])
 
     def test_density_correct_type(self):
         """
         Test that the density is a Function.
         """
-        d, _, _ = self.conf.get_parameters()
-        self.assertIsInstance(d, (Function, Constant, Sum))
+        p = self.conf.get_parameters()
+        self.assertIsInstance(p['electron_density'], (Function, Constant, Sum))
 
     def test_coulomb_ln_correct_type(self):
         """
         Test that the coulomb_ln is a Function.
         """
-        _, cl, _ = self.conf.get_parameters()
-        self.assertIsInstance(cl, (Function, Constant, Sum))
+        p = self.conf.get_parameters()
+        self.assertIsInstance(p['coulomb_ln'], (Function, Constant, Sum))
 
     def test_Z_correct_type(self):
         """
         Test that Z is a Function.
         """
-        _, _, Z = self.conf.get_parameters()
-        self.assertIsInstance(Z, (Function, Constant, Sum))
+        p = self.conf.get_parameters()
+        self.assertIsInstance(p['Z'], (Function, Constant, Sum))
 
 
 class TestGetInitialVal(unittest.TestCase):

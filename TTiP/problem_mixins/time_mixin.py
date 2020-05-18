@@ -2,8 +2,8 @@
 Contains the TimeMixin class for extending problems.
 Also contains the IterationMethod class used by TimeMixin.
 """
-from firedrake import Constant, Function, as_tensor, dx, sqrt
-from scipy.constants import m_e, e
+from firedrake import Constant, dx
+from scipy.constants import e
 
 from TTiP.util.logger import get_logger
 
@@ -20,9 +20,7 @@ class TimeMixin:
        class NewProblem(TimeMixin, Problem):
            pass
 
-    Required Attributes (for mixin):
-        V (firedrake.FunctionSpace):
-            A function space on which functions will be defined.
+    Attributes:
         T (firedrake.Function):
             The trial function for the problem.
         v (firedrake.Function):
@@ -30,17 +28,15 @@ class TimeMixin:
         a (firedrake.Function):
             The section containing the combination of terms involving both T
             and v.
-        q (Function):
-            The heat flux.
-
-    Attributes:
+        electron_density (firedrake.Function):
+            The electron density of the plasma.
         T_ (firedrake.Function):
             A function used to hold the previous value for T.
-        delT (firedrake.Function):
-            A function used as a placeholder for the time derivative.
         C (firedrake.Function):
             A function used to hold the heat capacity of the mesh.
-        t_max (float):
+        _delT (firedrake.Function):
+            A function used as a placeholder for the time derivative.
+        max_t (float):
             The time to iterate up to.
         dt (float):
             The size of each time step.
@@ -52,14 +48,7 @@ class TimeMixin:
             Toggle whether solving steady state (dT/dt = 0) or time dependent
             problem.
     """
-    # pylint: disable=too-many-instance-attributes
-
-    # Variables that must be present for the mixin.
-    # These will be replaced by the init in te class this is mixed into.
-    V = None
-    T = None
-    v = None
-    a = None
+    # pylint: disable=too-many-instance-attributes, no-member
 
     def __init__(self, *args, **kwargs):
         """
@@ -69,20 +58,22 @@ class TimeMixin:
         """
         super().__init__(*args, **kwargs)
 
-        self.T_ = Function(self.V, name='T_')
-        self._delT = Function(self.V, name='delT')
+        self._add_function('T')
+        self._add_function('a')
+        self._add_function('electron_density')
 
-        self.density = Function(self.V, name='density')
+        self._add_function('T_')
+        self._add_function('C')
+        self._add_function('_delT')
 
-        self.C = 1.5 * self.density * e
-
-        self.t_max = 1e-9
+        self.max_t = 1e-9
         self.dt = 1e-10
         self._dt_invc = Constant(0)
-        self.steps = self.t_max / self.dt
+        self.steps = self.max_t / self.dt
 
         self.steady_state = True
 
+        self.C = self._C()
         self.a += self._M()
 
     def set_method(self, method='BackwardEuler', **kwargs):
@@ -111,14 +102,14 @@ class TimeMixin:
         self.steady_state = True
         self._dt_invc.assign(0)
 
-    def set_timescale(self, t_max=None, dt=None, steps=None):
+    def set_timescale(self, max_t=None, dt=None, steps=None):
         """
-        Set the time stepping variables (t_max, dt, and number of steps).
+        Set the time stepping variables (max_t, dt, and number of steps).
         This method is designed to be given 2 variables and calculate the
         third. If 3 variables are given it will check that they are consistent.
 
         Args:
-            t_max (float, optional):
+            max_t (float, optional):
                 The time to iterate until. Defaults to None.
             dt (float, optional):
                 The increase in time for each iteration. Defaults to None.
@@ -131,50 +122,40 @@ class TimeMixin:
             RuntimeWarning: If steps is not an int.
         """
         num_var_none = 0
-        if t_max is None:
+        if max_t is None:
             num_var_none += 1
         if dt is None:
             num_var_none += 1
         if steps is None:
             num_var_none += 1
         if num_var_none > 1:
-            raise ValueError('Must specify at least 2 of total, dt, and steps')
+            raise ValueError('Must specify at least 2 of max_t, dt, and steps')
 
         if num_var_none == 0:
-            calc_steps = int(t_max / dt)
-            if calc_steps != t_max / dt:
+            calc_steps = int(max_t / dt)
+            if calc_steps != max_t / dt:
                 calc_steps += 1
 
             if steps != calc_steps:
                 raise ValueError('Conflicting arguments. Try specifying only 2'
-                                 ' of total, dt, and steps.')
+                                 ' of max_t, dt, and steps.')
 
-        if t_max is None:
-            t_max = dt * steps
+        if max_t is None:
+            max_t = dt * steps
         if dt is None:
-            dt = t_max / steps
+            dt = max_t / steps
         if steps is None:
-            steps = t_max / dt
+            steps = max_t / dt
 
         if steps != int(steps):
             steps = int(steps + 1)
             LOGGER.warning("steps is not an integer, rounding up.")
 
-        self.t_max = t_max
+        self.max_t = max_t
         self.dt = dt
         self._dt_invc.assign(1 / dt)
         self.steps = steps
         self.steady_state = False
-
-    def set_density(self, density):
-        """
-        Update density in all formulas (namely a).
-
-        Args:
-            density (Function):
-                The density for the problem.
-        """
-        self._update_func('density', density)
 
     def _M(self):
         """
@@ -185,49 +166,14 @@ class TimeMixin:
         """
         return self.C * self._delT * self.v * dx
 
-    def enable_flux_limiting(self):
-        r"""
-        Add flux limiting to ensure temperature is bound by physical
-        constraints.
-
-        This replaces the existing flux with the minimum of the flux and a
-        physical limit:
-
-        .. math::
-
-           n_e e T_e \sqrt{\frac{3 e T_e}{m_e}}
+    def _C(self):
         """
-        q_ex = self.q
-        q_fl = self.density * e * self.T * sqrt(3 * e * self.T / m_e)
-        q = [self._min(q_tmp, 0.3 * q_fl) for q_tmp in q_ex]
-        q = as_tensor([self._max(q_tmp, -0.3 * q_fl) for q_tmp in q])
-        self._update_func('q', q)
-
-    def _min(self, a, b):
-        """
-        Return the minimum of a and b.
-
-        Args:
-            a (Function or num): The first value.
-            b (Function or num): The second value.
+        Create the specific heat capacity.
 
         Returns:
-            Function or num: The minimum of a and b.
+            Function: The specific heat capacity.
         """
-        return 0.5 * (a + b - abs(a - b))
-
-    def _max(self, a, b):
-        """
-        Return the maximum of a and b.
-
-        Args:
-            a (Function or num): The first value.
-            b (Function or num): The second value.
-
-        Returns:
-            Function or num: The maximum of a and b.
-        """
-        return 0.5 * (a + b + abs(a - b))
+        return 1.5 * self.electron_density * e
 
 
 class IterationMethod:

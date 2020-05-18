@@ -87,6 +87,9 @@ class TestRun(unittest.TestCase):
         self.wd = os.getcwd()
         os.chdir(self.temp_dir.name)
 
+        self.args = ()
+        self.kwargs = {}
+
     def tearDown(self):
         """
         cd back to original working directory and cleanup the temp directory.
@@ -94,27 +97,32 @@ class TestRun(unittest.TestCase):
         os.chdir(self.wd)
         self.temp_dir.cleanup()
 
+    def capture_args(self, *args, **kwargs):
+        """
+        Capture arguments from a mocked out function.
+        """
+        self.args = args
+        self.kwargs = kwargs
+
     def test_generates_files(self):
         """
         Test that run generates the expected files for a given config file.
         """
-        if os.path.exists('./mock_results/be_box_nosource_steady.pvd'):
-            os.remove('./mock_results/be_box_nosource_steady*')
-        main.run(os.path.join(self.problems_dir,
-                              'be_box_nosource_steady.ini'))
-        self.assertTrue(
-            os.path.exists('./mock_results/be_box_nosource_steady.pvd'))
-        self.assertTrue(
-            os.path.exists('./mock_results/be_box_nosource_steady_0.vtu'))
-        self.assertTrue(
-            os.path.exists('./mock_results/be_box_nosource_steady_1.vtu'))
+        with patch.object(main.Solver, 'solve', self.capture_args):
+            main.run(os.path.join(self.problems_dir,
+                                  'be_box_nosource_steady.ini'))
+
+        self.assertDictEqual(
+            {'file_path': './mock_results/be_box_nosource_steady.pvd'},
+            self.kwargs)
 
     def test_logging_debug_off(self):
         """
         Test that the logging output is only reporting info with debug off.
         """
-        main.run(os.path.join(self.problems_dir,
-                              'be_box_nosource_steady.ini'))
+        with patch.object(main.Solver, 'solve', self.capture_args):
+            main.run(os.path.join(self.problems_dir,
+                                  'be_box_nosource_steady.ini'))
         out, _ = self._capsys.readouterr()
         self.assertNotIn('Building', out)
         self.assertIn('Running', out)
@@ -124,9 +132,10 @@ class TestRun(unittest.TestCase):
         """
         Test that the logging output is reporting all messages with debug on.
         """
-        main.run(os.path.join(self.problems_dir,
-                              'be_box_nosource_steady.ini'),
-                 debug=True)
+        with patch.object(main.Solver, 'solve', self.capture_args):
+            main.run(os.path.join(self.problems_dir,
+                                  'be_box_nosource_steady.ini'),
+                     debug=True)
         out, _ = self._capsys.readouterr()
         self.assertIn('Building', out)
         self.assertIn('Running', out)

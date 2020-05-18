@@ -26,11 +26,11 @@ class TestParse(unittest.TestCase):
         Test that the density value is correctly returned for a single
         constant.
         """
-        conf = {'density.type': 'constant',
-                'density.value': '2.6'}
+        conf = {'electron_density.type': 'constant',
+                'electron_density.value': '2.6'}
 
         self.parser.parse(conf)
-        density = self.parser.density
+        density = self.parser.parameters['electron_density']
 
         self.assertIsInstance(density, Constant)
         self.assertEqual(density([0.2, 1.0, 0.4]), 2.6)

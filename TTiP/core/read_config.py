@@ -119,7 +119,7 @@ class Config:
             self.get_mesh()
         parser = ParametersParser(self._mesh, self._V)
         parser.parse(self.conf_parser['PARAMETERS'])
-        return parser.density, parser.coulomb_ln, parser.Z
+        return parser.parameters
 
     def get_initial_val(self):
         """

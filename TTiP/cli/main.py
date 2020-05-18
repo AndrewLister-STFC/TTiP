@@ -58,30 +58,32 @@ def run(config_file, debug=False):
     mesh, V = config.get_mesh()
 
     # Get parameters
-    density, coulomb_ln, Z = config.get_parameters()
+    params = config.get_parameters()
 
     logger.debug('Setting timescales..')
     # Set up timescale
-    steps, dt, t_max = config.get_time()
-    if steps is None and dt is None and t_max is None:
+    steps, dt, max_t = config.get_time()
+    if steps is None and dt is None and max_t is None:
         problem = SteadyStateProblem(mesh=mesh, V=V)
     else:
         problem = TimeDependantProblem(mesh=mesh, V=V)
-        problem.set_timescale(steps=steps, dt=dt, t_max=t_max)
+        problem.set_timescale(steps=steps, dt=dt, max_t=max_t)
 
-        # Set time dependant parameters
-        problem.set_density(density)
+    # Set up parameters
+    ignored = []
+    for name, value in params.items():
+        try:
+            problem.set_function(name, value)
+        except AttributeError:
+            ignored.append(name)
 
-        problem.enable_flux_limiting()
-
-    # Set up other parameters
-    problem.set_coulomb_ln(coulomb_ln)
-    problem.set_Z(Z)
+    if ignored:
+        logger.info('Ignoring unnecesary parameters: %s', ', '.join(ignored))
 
     logger.debug('Building sources..')
     # Set up source
     source = config.get_sources()
-    problem.set_S(source)
+    problem.set_function('S', source)
 
     logger.debug('Building boundary conditions..')
     # Set up boundary conditions

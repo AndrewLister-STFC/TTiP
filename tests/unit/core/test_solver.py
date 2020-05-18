@@ -6,12 +6,20 @@ import unittest
 from tempfile import TemporaryDirectory
 
 import numpy as np
-
 from firedrake import (Constant, FunctionSpace, SpatialCoordinate,
                        UnitCubeMesh, UnitIntervalMesh, pi, sin)
 
-from TTiP.core.problem import SteadyStateProblem, TimeDependantProblem
+from TTiP.core.problem import create_problem_class
 from TTiP.core.solver import Solver
+
+SimpleSteadyState = create_problem_class(time_dep=False,
+                                         sh_conductivity=False,
+                                         limit_flux=False,
+                                         limit_conductivity=False)
+SimpleTimeDep = create_problem_class(time_dep=True,
+                                     sh_conductivity=False,
+                                     limit_flux=False,
+                                     limit_conductivity=False)
 
 
 # pylint: disable=protected-access
@@ -36,11 +44,11 @@ class TestSolve(unittest.TestCase):
         Test that the solve method creates the expected files for a steady
         state problem.
         """
-        prob = SteadyStateProblem(mesh=self.m, V=self.V)
+        prob = SimpleSteadyState(mesh=self.m, V=self.V)
         file_path = os.path.join(self.out_dir.name, 'out.pvd')
 
         prob._update_func('K', Constant(1))
-        prob.set_S(Constant(0))
+        prob.set_function('S', Constant(0))
         prob.set_no_boundary()
 
         solver = Solver(prob)
@@ -58,11 +66,11 @@ class TestSolve(unittest.TestCase):
         Test that the solve method creates the expected files for a time
         dependent problem.
         """
-        prob = TimeDependantProblem(mesh=self.m, V=self.V)
+        prob = SimpleTimeDep(mesh=self.m, V=self.V)
         file_path = os.path.join(self.out_dir.name, 'out.pvd')
 
-        prob._update_func('K', Constant(1))
-        prob.set_S(Constant(0))
+        prob.set_function('K', Constant(1))
+        prob.set_function('S', Constant(0))
         prob.set_no_boundary()
 
         num_steps = 5
@@ -86,11 +94,11 @@ class TestSolve(unittest.TestCase):
         Test that the solve creates a correct uniform result for a simple
         steady state problem.
         """
-        prob = SteadyStateProblem(mesh=self.m, V=self.V)
+        prob = SimpleSteadyState(mesh=self.m, V=self.V)
         file_path = os.path.join(self.out_dir.name, 'out.pvd')
 
-        prob._update_func('K', Constant(1))
-        prob.set_S(Constant(0))
+        prob.set_function('K', Constant(1))
+        prob.set_function('S', Constant(0))
         prob.add_boundary('dirichlet', g=10, surface='all')
 
         solver = Solver(prob)
@@ -120,12 +128,12 @@ class TestSolve(unittest.TestCase):
         m = UnitIntervalMesh(500)
         V = FunctionSpace(m, 'CG', 2)
 
-        prob = TimeDependantProblem(mesh=m, V=V)
+        prob = SimpleTimeDep(mesh=m, V=V)
         file_path = os.path.join(self.out_dir.name, 'out.pvd')
 
-        prob._update_func('C', Constant(1))
-        prob._update_func('K', Constant(1))
-        prob.set_S(Constant(0))
+        prob.set_function('C', Constant(1))
+        prob.set_function('K', Constant(1))
+        prob.set_function('S', Constant(0))
         prob.set_timescale(steps=100, dt=0.00001)
         prob.add_boundary('dirichlet', g=0, surface='all')
 
@@ -168,7 +176,7 @@ class TestIsSteadyState(unittest.TestCase):
         """
         Test that a time dependant problem returns true if no time set.
         """
-        prob = TimeDependantProblem(mesh=self.m, V=self.V)
+        prob = SimpleTimeDep(mesh=self.m, V=self.V)
         solver = Solver(prob)
         self.assertTrue(solver.is_steady_state())
 
@@ -176,7 +184,7 @@ class TestIsSteadyState(unittest.TestCase):
         """
         Test that the time dependant problem returns false if time set.
         """
-        prob = TimeDependantProblem(mesh=self.m, V=self.V)
+        prob = SimpleTimeDep(mesh=self.m, V=self.V)
         prob.set_timescale(dt=1.0, steps=5)
         solver = Solver(prob)
         self.assertFalse(solver.is_steady_state())
@@ -185,6 +193,6 @@ class TestIsSteadyState(unittest.TestCase):
         """
         Test that non time dependent problems return true.
         """
-        prob = SteadyStateProblem(mesh=self.m, V=self.V)
+        prob = SimpleSteadyState(mesh=self.m, V=self.V)
         solver = Solver(prob)
         self.assertTrue(solver.is_steady_state())
