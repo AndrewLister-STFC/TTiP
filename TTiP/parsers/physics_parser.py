@@ -33,5 +33,5 @@ class PhysicsParser(SectionParser):
                 The full PHYSICS section from the config.
         """
 
-        self.limit_conductivity = conf.getbool('limit_conductivity')
-        self.limit_flux = conf.getbool('limit_flux')
+        self.limit_conductivity = conf.getboolean('limit_conductivity')
+        self.limit_flux = conf.getboolean('limit_flux')
