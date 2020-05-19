@@ -6,7 +6,7 @@ import argparse
 import sys
 import time
 
-from TTiP.core.problem import SteadyStateProblem, TimeDependantProblem
+from TTiP.core.problem import create_problem_class
 from TTiP.core.read_config import Config
 from TTiP.core.solver import Solver
 from TTiP.util.logger import setup_logger
@@ -59,14 +59,23 @@ def run(config_file, debug=False):
 
     # Get parameters
     params = config.get_parameters()
+    constant_ionisation = 'ionisation' in params
 
     logger.debug('Setting timescales..')
     # Set up timescale
     steps, dt, max_t = config.get_time()
-    if steps is None and dt is None and max_t is None:
-        problem = SteadyStateProblem(mesh=mesh, V=V)
-    else:
-        problem = TimeDependantProblem(mesh=mesh, V=V)
+    time_dep = (steps is not None or dt is not None or max_t is not None)
+
+    ProblemClass = create_problem_class(
+        time_dep=time_dep,
+        sh_conductivity=True,
+        constant_ionisation=constant_ionisation,
+        limit_flux=True,
+        limit_conductivity=True)
+
+    problem = ProblemClass(mesh, V)
+
+    if time_dep:
         problem.set_timescale(steps=steps, dt=dt, max_t=max_t)
 
     # Set up parameters

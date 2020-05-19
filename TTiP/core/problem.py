@@ -11,6 +11,8 @@ from TTiP.problem_mixins.boundaries_mixin import BoundaryMixin
 from TTiP.problem_mixins.conductivity_mixin import (ConductivityLimiterMixin,
                                                     SpitzerHarmMixin)
 from TTiP.problem_mixins.flux_limit_mixin import FluxLimiterMixin
+from TTiP.problem_mixins.specific_heat_capacity_mixin import (
+    ConstantIonisationSHCMixin, NonConstantIonisationSHCMixin)
 from TTiP.problem_mixins.time_mixin import TimeMixin
 
 
@@ -72,11 +74,14 @@ class Problem:
         self._add_function('K')
         self._add_function('q')
         self._add_function('v_th')
+        self._add_function('ionisation')
+        self._add_function('atomic_number')
         self._add_function('a')
         self._add_function('L')
 
         self.q = self.K * grad(self.T)
         self.v_th = sqrt(3 * e * self.T / m_e)
+        self.ionisation = self._ionisation()
 
         self.a = self._A()
         self.L = self._f()
@@ -112,6 +117,17 @@ class Problem:
             Function: A complete source function section.
         """
         return self.S * self.v * dx
+
+    def _ionisation(self):
+        """
+        Create the ionisation energy term.
+
+        Returns:
+            Function: The ionisation term.
+        """
+        T_prime = self.atomic_number**(-4 / 3) * self.T
+        tmp = self.atomic_number * T_prime * (2.2 + T_prime)
+        return tmp / (1.1 + T_prime)**2
 
     def _update_func(self, name, val):
         """
@@ -225,6 +241,7 @@ class Problem:
 class SteadyStateProblem(ConductivityLimiterMixin,
                          FluxLimiterMixin,
                          SpitzerHarmMixin,
+                         ConstantIonisationSHCMixin,
                          BoundaryMixin,
                          Problem):
     """
@@ -237,6 +254,7 @@ class TimeDependantProblem(ConductivityLimiterMixin,
                            FluxLimiterMixin,
                            SpitzerHarmMixin,
                            TimeMixin,
+                           ConstantIonisationSHCMixin,
                            BoundaryMixin,
                            Problem):
     """
@@ -245,8 +263,11 @@ class TimeDependantProblem(ConductivityLimiterMixin,
     """
 
 
-def create_problem_class(time_dep=False, sh_conductivity=True,
-                         limit_flux=True, limit_conductivity=True):
+def create_problem_class(time_dep=False,
+                         sh_conductivity=True,
+                         constant_ionisation=True,
+                         limit_flux=True,
+                         limit_conductivity=True):
     """
     Create a problem class using a subset of available functionality.
 
@@ -256,6 +277,9 @@ def create_problem_class(time_dep=False, sh_conductivity=True,
             Defaults to False.
         sh_conductivity (bool, optional):
             Whether to use spitzer harm conductivity for the problem.
+            Defaults to True.
+        constant_ionisation (bool, optional):
+            Whether to use constant or non-constant ionisation.
             Defaults to True.
         limit_flux (bool, optional):
             Whether to enable flux limiting on the problem.
@@ -274,6 +298,10 @@ def create_problem_class(time_dep=False, sh_conductivity=True,
         dependancies.insert(0, TimeMixin)
     if sh_conductivity:
         dependancies.insert(0, SpitzerHarmMixin)
+    if constant_ionisation:
+        dependancies.insert(0, ConstantIonisationSHCMixin)
+    else:
+        dependancies.insert(0, NonConstantIonisationSHCMixin)
     if limit_flux:
         dependancies.insert(0, FluxLimiterMixin)
     if limit_conductivity:

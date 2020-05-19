@@ -28,8 +28,6 @@ class TimeMixin:
         a (firedrake.Function):
             The section containing the combination of terms involving both T
             and v.
-        electron_density (firedrake.Function):
-            The electron density of the plasma.
         T_ (firedrake.Function):
             A function used to hold the previous value for T.
         C (firedrake.Function):
@@ -60,7 +58,6 @@ class TimeMixin:
 
         self._add_function('T')
         self._add_function('a')
-        self._add_function('electron_density')
 
         self._add_function('T_')
         self._add_function('C')
@@ -73,7 +70,6 @@ class TimeMixin:
 
         self.steady_state = True
 
-        self.C = self._C()
         self.a += self._M()
 
     def set_method(self, method='BackwardEuler', **kwargs):
@@ -165,15 +161,6 @@ class TimeMixin:
             Function: The complete mass matrix section using delT.
         """
         return self.C * self._delT * self.v * dx
-
-    def _C(self):
-        """
-        Create the specific heat capacity.
-
-        Returns:
-            Function: The specific heat capacity.
-        """
-        return 1.5 * self.electron_density * e
 
 
 class IterationMethod:

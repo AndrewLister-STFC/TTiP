@@ -1,8 +1,6 @@
 """
 This contains the parser for parsing the PARAMETERS section of the config.
 """
-from firedrake import Constant
-
 from TTiP.parsers.parser import FunctionSectionParser
 
 
@@ -31,9 +29,7 @@ class ParametersParser(FunctionSectionParser):
                 The function space that the functions should belong to.
         """
         super().__init__(mesh, V)
-        self.parameters = {'electron_density': Constant(5.0e28),
-                           'coulomb_ln': Constant(10),
-                           'z': Constant(12)}
+        self.parameters = {}
 
     def parse(self, conf):
         """
