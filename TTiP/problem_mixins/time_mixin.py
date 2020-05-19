@@ -3,7 +3,6 @@ Contains the TimeMixin class for extending problems.
 Also contains the IterationMethod class used by TimeMixin.
 """
 from firedrake import Constant, dx
-from scipy.constants import e
 
 from TTiP.util.logger import get_logger
 
