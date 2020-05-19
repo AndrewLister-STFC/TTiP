@@ -253,12 +253,12 @@ class TestGetParameters(unittest.TestCase):
         p = self.conf.get_parameters()
         self.assertIsInstance(p['coulomb_ln'], (Function, Constant, Sum))
 
-    def test_Z_correct_type(self):
+    def test_ionisation_correct_type(self):
         """
-        Test that Z is a Function.
+        Test that ionisation is a Function.
         """
         p = self.conf.get_parameters()
-        self.assertIsInstance(p['Z'], (Function, Constant, Sum))
+        self.assertIsInstance(p['ionisation'], (Function, Constant, Sum))
 
 
 class TestGetInitialVal(unittest.TestCase):

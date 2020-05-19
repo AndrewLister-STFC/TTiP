@@ -11,7 +11,8 @@ from unittest import TestCase
 from firedrake import FunctionSpace, UnitCubeMesh
 
 from TTiP.core.problem import Problem
-from TTiP.problem_mixins.conductivity_mixin import SpitzerHarmMixin, ConductivityLimiterMixin
+from TTiP.problem_mixins.conductivity_mixin import (ConductivityLimiterMixin,
+                                                    SpitzerHarmMixin)
 
 
 # =============================================================================
@@ -50,7 +51,7 @@ class TestSHInit(TestCase):
         """
         prob = self.cls(mesh=self.mesh, V=self.V)
         self.assertTrue(hasattr(prob, 'coulomb_ln'))
-        self.assertTrue(hasattr(prob, 'Z'))
+        self.assertTrue(hasattr(prob, 'ionisation'))
 
 
 # =============================================================================
@@ -89,4 +90,4 @@ class TestCLInit(TestCase):
         """
         prob = self.cls(mesh=self.mesh, V=self.V)
         self.assertTrue(hasattr(prob, 'ion_density'))
-        self.assertTrue(hasattr(prob, 'z'))
+        self.assertTrue(hasattr(prob, 'ionisation'))
