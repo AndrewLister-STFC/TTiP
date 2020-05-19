@@ -66,12 +66,14 @@ def run(config_file, debug=False):
     steps, dt, max_t = config.get_time()
     time_dep = (steps is not None or dt is not None or max_t is not None)
 
+    limit_conductivity, limit_flux = config.get_physics_settings()
+
     ProblemClass = create_problem_class(
         time_dep=time_dep,
         sh_conductivity=True,
         constant_ionisation=constant_ionisation,
-        limit_flux=True,
-        limit_conductivity=True)
+        limit_flux=limit_flux,
+        limit_conductivity=limit_conductivity)
 
     problem = ProblemClass(mesh, V)
 
