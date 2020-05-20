@@ -98,7 +98,7 @@ class Problem:
         """
         if name not in self._functions:
             raise AttributeError('Could not set "{}"'.format(name))
-        self._update_func(name, value)
+        self._update_func(name=name, val=value)
 
     def _A(self):
         """
