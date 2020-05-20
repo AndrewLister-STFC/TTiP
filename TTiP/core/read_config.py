@@ -10,6 +10,7 @@ from TTiP.parsers.boundary_conds_parser import BoundaryCondsParser
 from TTiP.parsers.initial_vals_parser import InitialValParser
 from TTiP.parsers.mesh_parser import MeshParser
 from TTiP.parsers.parameters_parser import ParametersParser
+from TTiP.parsers.physics_parser import PhysicsParser
 from TTiP.parsers.solver_parser import SolverParser
 from TTiP.parsers.sources_parser import SourcesParser
 from TTiP.parsers.time_parser import TimeParser
@@ -144,3 +145,14 @@ class Config:
         parser = SolverParser()
         parser.parse(self.conf_parser['SOLVER'])
         return parser.file_path, parser.method, parser.params
+
+    def get_physics_settings(self):
+        """
+        Get the values from the physics section.
+
+        Returns:
+            bool, bool: limit_conductivity and limit_flux
+        """
+        parser = PhysicsParser()
+        parser.parse(self.conf_parser['PHYSICS'])
+        return parser.limit_conductivity, parser.limit_flux

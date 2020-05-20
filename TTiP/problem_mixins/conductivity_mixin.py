@@ -21,8 +21,8 @@ class SpitzerHarmMixin:
             The conductivity (will be updated by this mixin)
         coulomb_ln (Function):
             The coulomb logarithm for the problem.
-        Z (Function):
-            The ionisation term for the problem.
+        ionisation (Function):
+            The ionisation energy for the problem.
     """
     # pylint: disable=too-few-public-methods, no-member
 
@@ -37,7 +37,7 @@ class SpitzerHarmMixin:
         self._add_function('T')
         self._add_function('K')
         self._add_function('coulomb_ln')
-        self._add_function('Z')
+        self._add_function('ionisation')
 
         self.set_function('K', self._K())
 
@@ -49,7 +49,7 @@ class SpitzerHarmMixin:
             Function: The Spitzer-Harm conductivity
         """
         tmp = 288 * pi * sqrt(2) * epsilon_0**2 / sqrt(e * m_e)
-        tmp = tmp * pow(self.T, 5 / 2) / (self.coulomb_ln * self.Z)
+        tmp = tmp * pow(self.T, 5 / 2) / (self.coulomb_ln * self.ionisation)
 
         return tmp
 
@@ -68,8 +68,8 @@ class ConductivityLimiterMixin:
             The electron temperature in the plasma.
         ion_density (Function):
             The density of ions in the plasma.
-        Z (Function):
-            The ionization term.
+        ionisation (Function):
+            The ionisation energy.
         v_th (Function):
             The value of v_th (thermal velocity?)
         K (Function):
@@ -87,7 +87,7 @@ class ConductivityLimiterMixin:
 
         self._add_function('T')
         self._add_function('ion_density')
-        self._add_function('Z')
+        self._add_function('ionisation')
         self._add_function('v_th')
         self._add_function('K')
 
@@ -97,7 +97,7 @@ class ConductivityLimiterMixin:
     def _K_min(self):
         r_ii = (3 / (4 * pi * self.ion_density))**(1 / 3)
         tau_min = r_ii / self.v_th
-        tmp = 48 * self.Z * self.ion_density * e**2 * self.T * tau_min
+        tmp = 48 * self.ionisation * self.ion_density * e**2 * self.T * tau_min
         tmp = tmp / sqrt(pi) / m_e
 
         return tmp

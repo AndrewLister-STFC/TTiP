@@ -4,6 +4,7 @@ Test the problem.py file.
 No tests for init, _A, _f as these just declare something.
 """
 from unittest import TestCase
+from unittest.mock import patch
 
 from firedrake import (Function, FunctionSpace, SpatialCoordinate,
                        UnitCubeMesh, as_tensor, dx)
@@ -13,6 +14,8 @@ from TTiP.problem_mixins.boundaries_mixin import BoundaryMixin
 from TTiP.problem_mixins.conductivity_mixin import (ConductivityLimiterMixin,
                                                     SpitzerHarmMixin)
 from TTiP.problem_mixins.flux_limit_mixin import FluxLimiterMixin
+from TTiP.problem_mixins.specific_heat_capacity_mixin import (
+    ConstantIonisationSHCMixin, NonConstantIonisationSHCMixin)
 from TTiP.problem_mixins.time_mixin import TimeMixin
 
 
@@ -85,6 +88,52 @@ class TestUpdateFunc(TestCase):
         self.assertEqual(self.prob.P, new_P, 'P is not correct')
 
 
+class TestSetFunction(TestCase):
+    """
+    Tests for the set_function method.
+    """
+    def setUp(self):
+        """
+        Create a blank problem.
+        """
+        self.mesh = UnitCubeMesh(10, 10, 10)
+        self.V = FunctionSpace(self.mesh, 'CG', 1)
+
+        self.prob = problem.Problem(mesh=self.mesh, V=self.V)
+
+        self.args = ()
+        self.kwargs = {}
+
+    def test_unmanaged_function(self):
+        """
+        Test that the function raises an exception if the name is not in the
+        function list.
+        """
+        self.prob._functions = []
+
+        with self.assertRaises(AttributeError):
+            self.prob.set_function('foo', 3)
+
+    def test_correct_call(self):
+        """
+        Test that the correct values are passed to _update_func.
+        """
+        self.prob._functions = ['foo']
+
+        with patch.object(self.prob, '_update_func', self.stash_args):
+            self.prob.set_function('foo', 3)
+
+        self.assertTupleEqual(self.args, ())
+        self.assertDictEqual(self.kwargs, {'name': 'foo', 'val': 3})
+
+    def stash_args(self, *args, **kwargs):
+        """
+        Utility function to capture arguments from mocked out functions.
+        """
+        self.args = args
+        self.kwargs = kwargs
+
+
 class TestAddFunction(TestCase):
     """
     Tests for the _add_function method.
@@ -142,6 +191,15 @@ class TestBound(TestCase):
 
         self.prob.to_bound = Function(self.V)
         self.prob.test_func = self.prob.to_bound + 1
+
+    def test_non_existant_function(self):
+        """
+        Test that an exception is raised if the name does not exist.
+        """
+        self.assertFalse(hasattr(self.prob, 'baz'))
+        
+        with self.assertRaises(AttributeError):
+            self.prob.bound('baz', 1, 2)
 
     def test_set_no_bound(self):
         """
@@ -412,6 +470,22 @@ class TestCreateProblemClass(TestCase):
         klass = problem.create_problem_class(sh_conductivity=True)
         self.assertTrue(issubclass(klass, SpitzerHarmMixin))
 
+    def test_constant_ionisation_false(self):
+        """
+        Test that the problem does inherits from NonConstantIonisationSHCMixin
+        if constant_ionisation is false.
+        """
+        klass = problem.create_problem_class(constant_ionisation=False)
+        self.assertTrue(issubclass(klass, NonConstantIonisationSHCMixin))
+
+    def test_constant_ionisation_true(self):
+        """
+        Test that the problem does inherit from ConstantIonisationSHCMixin if
+        constant_ionisation is true.
+        """
+        klass = problem.create_problem_class(constant_ionisation=True)
+        self.assertTrue(issubclass(klass, ConstantIonisationSHCMixin))
+
     def test_limit_flux_false(self):
         """
         Test that the problem does not inherit from FluxLimiterMixin if
@@ -449,10 +523,12 @@ class TestCreateProblemClass(TestCase):
         Test that a mix of settings has all the required functionality.
         """
         klass = problem.create_problem_class(time_dep=True,
+                                             sh_conductivity=True,
+                                             constant_ionisation=False,
                                              limit_flux=False,
-                                             limit_conductivity=True,
-                                             sh_conductivity=True)
+                                             limit_conductivity=True)
         self.assertTrue(issubclass(klass, TimeMixin))
+        self.assertTrue(issubclass(klass, SpitzerHarmMixin))
+        self.assertTrue(issubclass(klass, NonConstantIonisationSHCMixin))
         self.assertFalse(issubclass(klass, FluxLimiterMixin))
         self.assertTrue(issubclass(klass, ConductivityLimiterMixin))
-        self.assertTrue(issubclass(klass, SpitzerHarmMixin))

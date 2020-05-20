@@ -3,7 +3,7 @@ Tests for the read_config.py file.
 """
 import os
 import tempfile
-import unittest
+from unittest import TestCase
 from unittest.mock import patch
 
 from firedrake import Constant, Function
@@ -14,7 +14,7 @@ from ufl.algebra import Sum
 from TTiP.core import read_config
 
 
-class TestInit(unittest.TestCase):
+class TestInit(TestCase):
     """
     Tests for the init method.
     """
@@ -74,7 +74,7 @@ class TestInit(unittest.TestCase):
             _ = read_config.Config('fake_name.not_a_file')
 
 
-class TestGetBoundaryConds(unittest.TestCase):
+class TestGetBoundaryConds(TestCase):
     """
     Tests for the get_boundary_conds method.
     """
@@ -107,7 +107,7 @@ class TestGetBoundaryConds(unittest.TestCase):
         self.assertIsInstance(bcs, (list))
 
 
-class TestGetSources(unittest.TestCase):
+class TestGetSources(TestCase):
     """
     Tests for the get_sources method.
     """
@@ -140,7 +140,7 @@ class TestGetSources(unittest.TestCase):
         self.assertIsInstance(s, (Function, Constant, Sum))
 
 
-class TestGetTime(unittest.TestCase):
+class TestGetTime(TestCase):
     """
     Tests for the get_time method.
     """
@@ -178,7 +178,7 @@ class TestGetTime(unittest.TestCase):
             self.assertIsInstance(mt, (int, float))
 
 
-class TestGetMesh(unittest.TestCase):
+class TestGetMesh(TestCase):
     """
     Tests for the get_mesh method.
     """
@@ -213,7 +213,7 @@ class TestGetMesh(unittest.TestCase):
         self.assertIsInstance(V, FunctionSpace)
 
 
-class TestGetParameters(unittest.TestCase):
+class TestGetParameters(TestCase):
     """
     Tests for the get_parameters method.
     """
@@ -253,15 +253,15 @@ class TestGetParameters(unittest.TestCase):
         p = self.conf.get_parameters()
         self.assertIsInstance(p['coulomb_ln'], (Function, Constant, Sum))
 
-    def test_Z_correct_type(self):
+    def test_ionisation_correct_type(self):
         """
-        Test that Z is a Function.
+        Test that ionisation is a Function.
         """
         p = self.conf.get_parameters()
-        self.assertIsInstance(p['Z'], (Function, Constant, Sum))
+        self.assertIsInstance(p['ionisation'], (Function, Constant, Sum))
 
 
-class TestGetInitialVal(unittest.TestCase):
+class TestGetInitialVal(TestCase):
     """
     Tests for the get_initial_val method.
     """
@@ -294,7 +294,7 @@ class TestGetInitialVal(unittest.TestCase):
         self.assertIsInstance(iv, (Function, Constant, Sum))
 
 
-class TestGetSolverParams(unittest.TestCase):
+class TestGetSolverParams(TestCase):
     """
     Tests for the get_solver_params method.
     """
@@ -327,3 +327,37 @@ class TestGetSolverParams(unittest.TestCase):
         self.assertIsInstance(fp, str)
         self.assertIsInstance(m, str)
         self.assertIsInstance(p, dict)
+
+
+class TestGetPhysicsSettings(TestCase):
+    """
+    Tests for the get_physics_settings method.
+    """
+
+    def setUp(self):
+        """
+        Define the config file and the Config object.
+        """
+        problems_dir = os.path.join(
+            os.path.dirname(__file__), os.pardir, os.pardir, 'mock_problems')
+        self.config_file = os.path.join(problems_dir,
+                                        'be_box_nosource_steady.ini')
+        self.conf = read_config.Config(self.config_file)
+
+    def test_correct_physics(self):
+        """
+        Test that the physics section is correctly passed through.
+        """
+        def new_func(s, x):
+            s.limit_conductivity = x is self.conf.conf_parser['PHYSICS']
+
+        with patch.object(read_config.PhysicsParser, 'parse', new_func):
+            self.assertTrue(self.conf.get_physics_settings()[0])
+
+    def test_correct_types(self):
+        """
+        Test that the outputs are the expected type.
+        """
+        lim_con, lim_flux = self.conf.get_physics_settings()
+        self.assertIsInstance(lim_con, bool)
+        self.assertIsInstance(lim_flux, bool)
