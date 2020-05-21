@@ -40,6 +40,9 @@ class Solver:
             'pc_python_type': 'firedrake.AssembledPC',
             'assembled_pc_type': 'hypre',  # 'lu',
             'assembled_pc_factor_mat_solver_type': 'mumps',
+            'assembled_pc_hypre_type': 'boomeramg',
+            'assembled_pc_hypre_boomeramg_max_iter': 10,
+            'assembled_pc_hypre_boomeramg_tol': 1e-9,
             # 'snes_monitor': None,
             # 'snes_view': None,
             # 'ksp_monitor_true_residual': None,
@@ -47,11 +50,11 @@ class Solver:
             # 'ksp_converged_reason': None,
             'snes_linesearch_type': 'l2',
             'snes_linesearch_maxstep': 1.0,
-            'snes_atol': 1e-6,
-            'snes_rtol': 0,
-            'snes_stol': 1e-16,
+            # 'snes_atol': 1e-6,
+            # 'snes_rtol': 0,
+            # 'snes_stol': 1e-16,
             'snes_max_L_solve_fail': 10,
-            'snes_max_it': 100}
+            'snes_max_it': 1000}
 
     def solve(self, file_path='ttip_result/solution.pvd'):
         """
