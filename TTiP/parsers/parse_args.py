@@ -26,7 +26,8 @@ class Node(ABC):
             for the evaluation.
 
     Attributes:
-        _parent (Node): The node that this one branches from.
+        _parent (Node):
+            The node that this one branches from.
         used_terminals (list<str>):
             Which terminals have been used in the node and children.
     """
