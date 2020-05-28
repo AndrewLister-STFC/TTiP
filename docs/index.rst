@@ -22,6 +22,7 @@ can be used as described on the Installing page.
       Installing <users/installing>
       General Usage <users/usage>
       Config File <users/conf_file>
+      Contributors <devs/index>
 
 
 Indices and tables
