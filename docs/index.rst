@@ -10,7 +10,7 @@ TTiP - Thermal Transfer in Plasma is a tool to solve heat transfer problems
 specifically aimed at the plasma physics domain.
 
 This tool uses `Firedrake <https://firedrakeproject.org/>`_ as the backend
-solver. The install for this can take sme time, alternatively a docker image
+solver. The install for this can take some time, alternatively a docker image
 can be used as described on the Installing page.
 
 
@@ -19,9 +19,11 @@ can be used as described on the Installing page.
    :titlesonly:
    :caption: Contents:
 
-      Installing <users/installing>
+      Installing <users/installing/index>
       General Usage <users/usage>
       Config File <users/conf_file>
+      Outputs <users/outputs>
+      Paraview Help <users/paraview_tips>
       Contributors <devs/index>
 
 

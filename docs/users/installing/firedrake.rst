@@ -1,18 +1,13 @@
-.. _file_install:
 
-###############
-Installing TTiP
-###############
+#############################
+Installing Firedrake - Manual
+#############################
 
-Firedrake
-=========
+*Warning: This method will take a long time to install*
+
 TTiP uses `Firedrake <https://firedrakeproject.org/index.html>`__
 to solve the underlying equations. To install this, please see the install page
 in their documentation `here <https://firedrakeproject.org/download.html>`__.
-Alternatively, firedrake has a docker image available
-`here <https://hub.docker.com/r/firedrakeproject/firedrake/>`__, this image
-contains a build of Ubuntu with firedrakes dependencies pre-installed,
-and will be much faster than building from scratch.
 
 Firedrake in turn uses the widely used PETSc which will be installed with
 Firedrake but can take some time.
@@ -26,16 +21,3 @@ To activate the virtualenv run::
     . firedrake/bin/activate
 
 This will mean python can access the firedrake modules.
-
-TTiP
-====
-
-Once inside the firedrake virtualenv, install any additional packages that are
-required with (in the root of this repository)::
-
-    pip install .
-
-
-To check it works try running::
-
-    ttip --help
