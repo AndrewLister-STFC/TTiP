@@ -22,6 +22,7 @@ can be used as described on the Installing page.
       Installing <users/installing/index>
       General Usage <users/usage>
       Config File <users/conf_file>
+      Defining Functions <users/functions>
       Outputs <users/outputs>
       Paraview Help <users/paraview_tips>
       Contributors <devs/index>

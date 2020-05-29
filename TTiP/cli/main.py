@@ -6,6 +6,7 @@ import argparse
 import sys
 import time
 
+from TTiP.cli.gen_conf import gen_conf
 from TTiP.core.problem import create_problem_class
 from TTiP.core.read_config import Config
 from TTiP.core.solver import Solver
@@ -32,7 +33,12 @@ def get_argparser():
                         action='store_true',
                         help='Run in debug mode')
     parser.add_argument('config',
-                        help='Path to problem definition config file.')
+                        help='Path to problem definition config file.',
+                        nargs='?')
+    parser.add_argument('-g', '--gen_conf',
+                        action='store_true',
+                        help='Generate a clean config file with documented'
+                             ' options.')
 
     return parser
 
@@ -137,6 +143,10 @@ def main():
         sys.exit(1)
 
     args = parser.parse_args(sys.argv[1:])
+
+    if args.gen_conf:
+        gen_conf()
+        return
 
     run(config_file=args.config, debug=args.debug)
 
